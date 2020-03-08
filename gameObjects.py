@@ -36,15 +36,20 @@ class Moveable:
         self.velocity += 2
 
 
+class Goal(GameObject):
+    def __init__(self, x, y, width, height, color):
+        super().__init__(x, y, width, height, color)
+
+
 class Player(GameObject, Moveable):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, x, y, width, height, color):
+        super().__init__(x, y, width, height, color)
         self.is_alive = False
 
 
 class Wall(GameObject):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, x, y, width, height, color):
+        super().__init__(x, y, width, height, color)
 
     def get_random(self, coord_max, min_dimensions, tile_count=1):
         self.width = random.randint(
@@ -61,5 +66,5 @@ class Wall(GameObject):
 
 
 class WallMoveable(Wall, Moveable):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, x, y, width, height, color):
+        super().__init__(x, y, width, height, color)

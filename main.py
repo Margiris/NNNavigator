@@ -3,7 +3,7 @@ import tensorflow as tf
 
 from _random import Random
 
-from gameObjects import Player, Wall
+from gameObjects import Goal, Player, Wall
 from util import Color
 
 MAIN_WINDOW_DIMENSIONS = (800, 600)
@@ -22,12 +22,16 @@ wallCount = 500
 
 for _ in range(wallCount):
     wall = Wall(0, 0, 1, 1, Color.WHITE)
-    wall.get_random(MAIN_WINDOW_DIMENSIONS, (10, 10), wallCount / 10)
+    wall.get_random(MAIN_WINDOW_DIMENSIONS, (10, 10), wallCount / 20)
     gameObjects.append(wall)
 
 player = Player(250, 250, 10, 10, Color.GREEN)
 player.place_at_random_coords(MAIN_WINDOW_DIMENSIONS)
 gameObjects.append(player)
+
+goal = Goal(0, 0, 10, 10, Color.RED)
+goal.place_at_random_coords(MAIN_WINDOW_DIMENSIONS)
+gameObjects.append(goal)
 
 running = True
 
