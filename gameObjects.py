@@ -2,7 +2,7 @@ import random
 
 
 class GameObject:
-    def __init__(self, x, y, width, height, color):
+    def __init__(self, color, x=0, y=0, width=1, height=1):
         self.x = x
         self.y = y
         self.width = width
@@ -37,25 +37,23 @@ class Moveable:
 
 
 class Goal(GameObject):
-    def __init__(self, x, y, width, height, color):
-        super().__init__(x, y, width, height, color)
+    def __init__(self, color, x=0, y=0, width=1, height=1):
+        super().__init__(color, x, y, width, height)
 
 
 class Player(GameObject, Moveable):
-    def __init__(self, x, y, width, height, color):
-        super().__init__(x, y, width, height, color)
+    def __init__(self, color, x=0, y=0, width=1, height=1):
+        super().__init__(color, x, y, width, height)
         self.is_alive = False
 
 
 class Wall(GameObject):
-    def __init__(self, x, y, width, height, color):
-        super().__init__(x, y, width, height, color)
+    def __init__(self, color, x=0, y=0, width=1, height=1):
+        super().__init__(color, x, y, width, height)
 
-    def get_random(self, coord_max, min_dimensions, tile_count=1):
-        self.width = random.randint(
-            min_dimensions[0], coord_max[0] / tile_count)
-        self.height = random.randint(
-            min_dimensions[1], coord_max[1] / tile_count)
+    def get_random(self, coord_max, tile_count=1):
+        self.width = random.randint(1, coord_max[0] / tile_count)
+        self.height = random.randint(1, coord_max[1] / tile_count)
 
         if self.height > self.width:
             self.width = 10
