@@ -1,76 +1,82 @@
-import pygame, sys
+import pygame
+import sys
 from pygame.locals import *
-# from pygame.locals import HWSURFACE, DOUBLEBUF, RESIZABLE, VIDEORESIZE
-import tensorflow as tf
-
-from _random import Random
-
-from gameObjects import Goal, Player, Wall
-from util import Color
-
-WINDOW_DIMENSIONS = (800, 600)
-MATRIX_DIMENSIONS = (80, 60)
-MIN_OBJECT_DIMENSIONS = (
-    WINDOW_DIMENSIONS[0] / MATRIX_DIMENSIONS[0],
-    WINDOW_DIMENSIONS[1] / MATRIX_DIMENSIONS[1])
-WALL_COUNT = 500
-
-pygame.init()
-
-screen = pygame.display.set_mode(
-    WINDOW_DIMENSIONS, HWSURFACE | DOUBLEBUF | RESIZABLE)
-pygame.display.set_caption("NNNavigator")
-clock = pygame.time.Clock()
+from button import Button
+from color import Color
+from settings import Settings
+from state import State
 
 
-gameObjects = []
+class Program:
+    def __init__(self):
+        self.settings = Settings()
+        pygame.init()
+        self.clock = pygame.time.Clock()
 
-wallCount = 500
+        self.surface_main = pygame.display.set_mode(
+            self.settings.WINDOW_SIZE, DOUBLEBUF | RESIZABLE)
+        pygame.display.set_caption(self.settings.WINDOW_TITLE)
 
-for _ in range(wallCount):
-    wall = Wall(Color.WHITE)
-    wall.get_random(MATRIX_DIMENSIONS, wallCount / 50)
-    gameObjects.append(wall)
+        self.state = None
+        self.change_to_state(State.MENU)
 
-player = Player(Color.GREEN)
-player.place_at_random_coords(MATRIX_DIMENSIONS)
-gameObjects.append(player)
+    def change_to_state(self, state):
+        if type(state) == type(State.MENU):
+            self.state = State(state, self)
+        else:
+            self.state = state
 
-goal = Goal(Color.RED)
-goal.place_at_random_coords(WINDOW_DIMENSIONS)
-gameObjects.append(goal)
+        if self.state == State.PAUSE:
+            self.pause()
 
-running = True
+    def run(self):
+        while self.state != State.QUIT:
+            self.handle_events()
+            self.update()
+            self.draw()
+            self.clock.tick(self.settings.MAX_FPS)
 
-while running:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == VIDEORESIZE:
-            screen = pygame.display.set_mode(
-                event.dict['size'], HWSURFACE | DOUBLEBUF | RESIZABLE)
-            # screen.blit(pygame.transform.scale(pic,event.dict['size']),(0,0))
+        # pygame.quit()
+        # sys.exit()
 
-            WINDOW_DIMENSIONS = screen.get_size()
-            MIN_OBJECT_DIMENSIONS = (
-                WINDOW_DIMENSIONS[0] / MATRIX_DIMENSIONS[0],
-                WINDOW_DIMENSIONS[1] / MATRIX_DIMENSIONS[1])
-            print(MIN_OBJECT_DIMENSIONS)
-            pygame.display.flip()
-            for obj in gameObjects:
-                obj.width = MIN_OBJECT_DIMENSIONS[0]
-                obj.height = MIN_OBJECT_DIMENSIONS[1]
+    def pause(self):
+        while self.state == State.PAUSE:
+            self.handle_events()
+            self.state.update()
+            self.draw()
+            self.clock.tick(self.settings.MIN_FPS)
 
-    for key in pygame.key.get_pressed():
-        if key == pygame.K_LEFT:
-            print()
-        if key == pygame.K_RIGHT:
-            print()
+    def handle_events(self):
+        events = pygame.event.get()
+        self.state.handle_events(self, events)
 
-    screen.fill((0, 0, 0))
+        for event in events:
+            if event.type == pygame.QUIT:
+                self.change_to_state(State.QUIT)
+            elif event.type == VIDEORESIZE:
+                self.resize(event.dict['size'])
+                self.resize(event.dict['size'])
+            elif event.type == pygame.KEYDOWN:
+                pass
 
-    pygame.display.update()
-    clock.tick(10)
+    def update(self):
+        self.state.update()
 
-pygame.quit()
-sys.exit()
+    def draw(self):
+        self.surface_main.fill(self.settings.BACKGROUND_COLOR)
+        self.state.draw()
+        pygame.display.flip()
+
+    def resize(self, size):
+        self.settings.WINDOW_SIZE_CURRENT = (
+            size[0] if size[0] >= self.settings.WINDOW_SIZE_MINIMUM[0] else self.settings.WINDOW_SIZE_CURRENT[0],
+            size[1] if size[1] >= self.settings.WINDOW_SIZE_MINIMUM[1] else self.settings.WINDOW_SIZE_CURRENT[1])
+
+        self.surface_main = pygame.display.set_mode(
+            self.settings.WINDOW_SIZE_CURRENT, DOUBLEBUF | RESIZABLE)
+        self.surface_main.fill(self.settings.BACKGROUND_COLOR)
+
+
+if __name__ == "__main__":
+    snake = Program()
+    snake.run()

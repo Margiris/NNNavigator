@@ -7,7 +7,6 @@ class Button:
     def __init__(self, surface, coords, size, bg_color, text, function, *args):
         self.surface = surface
         self.coords = coords
-        # self.x, self.y = coords
         self.width, self.height = size
         # self.bg_color = bg_color
         self.bg_color = Color.randomColor()
@@ -17,8 +16,8 @@ class Button:
         self.text = text
         self.function = function
         self.args = args
-        self.font = pygame.font.SysFont(
-            'Roboto', Settings.BUTTON_TEXT_SIZE, bold=True)
+        self.font = pygame.font.SysFont('Roboto', Settings.BUTTON_TEXT_SIZE,
+                                        bold=True)
 
     @property
     def x(self):

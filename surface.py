@@ -4,21 +4,14 @@ from settings import Settings
 
 
 class Surface:
-    def __init__(self, parent, size_func, offset, fill_color, line_color, line_width):
+    def __init__(self, parent, size_func, offset, fill_color):
         self.parent = parent
         self.size_func = size_func
         self.original_size = size_func()
         self.pos = offset
         self.fill_color = fill_color
-        self.line_color = line_color
-        self.line_width = line_width
 
         self.surface = pygame.Surface(self.original_size)
-
-        self.tile_size = (self.original_size[0] / Settings.TILE_COUNT[0],
-                          self.original_size[1] / Settings.TILE_COUNT[1])
-        # self.pic = pygame.surface.Surface((50, 50))
-        # self.pic.fill((255, 100, 200))
 
     @property
     def size(self):
@@ -29,15 +22,19 @@ class Surface:
 
     def draw(self):
         self.surface.fill(self.fill_color)
-        # self.surface.blit(self.pic, (150, 80))
 
         self.parent.blit(pygame.transform.scale(
             self.surface, self.size), self.pos)
 
 
-class GameSurface(Surface):
+class TiledSurface(Surface):
     def __init__(self, parent, size_func, offset, fill_color, line_color, line_width):
-        super().__init__(parent, size_func, offset, fill_color, line_color, line_width)
+        super().__init__(parent, size_func, offset, fill_color)
+
+        self.line_color = line_color
+        self.line_width = line_width
+        self.tile_size = (self.original_size[0] / Settings.TILE_COUNT[0],
+                          self.original_size[1] / Settings.TILE_COUNT[1])
 
     def draw(self):
         self.surface.fill(self.fill_color)
@@ -48,7 +45,6 @@ class GameSurface(Surface):
         pygame.draw.rect(self.parent, self.line_color,
                          (self.pos[0] - line_width_offset,
                           self.pos[1] - line_width_offset,
-                          #  (self.pos[0], self.pos[1],
                           self.size[0] + line_width_offset * 2,
                           self.size[1] + line_width_offset * 2),
                          self.line_width)
