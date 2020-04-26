@@ -7,11 +7,10 @@ class Surface:
     def __init__(self, parent, size_func, offset, fill_color):
         self.parent = parent
         self.size_func = size_func
-        self.original_size = size_func()
         self.pos = offset
         self.fill_color = fill_color
 
-        self.surface = pygame.Surface(self.original_size)
+        self.surface = pygame.Surface(size_func())
 
     @property
     def size(self):
@@ -21,48 +20,56 @@ class Surface:
         pass
 
     def draw(self):
-        self.surface.fill(self.fill_color)
+        # self.surface.fill(self.fill_color)
 
         self.parent.blit(pygame.transform.scale(
             self.surface, self.size), self.pos)
 
 
-class TiledSurface(Surface):
-    def __init__(self, parent, size_func, offset, fill_color, line_color, line_width):
+class TiledScalableSurface(Surface):
+    def __init__(self, parent, size, size_func, offset, fill_color, line_color, line_width):
         super().__init__(parent, size_func, offset, fill_color)
 
+        self.original_size = size
         self.line_color = line_color
         self.line_width = line_width
-        self.tile_size = (self.original_size[0] / Settings.TILE_COUNT[0],
-                          self.original_size[1] / Settings.TILE_COUNT[1])
+        self.tile_size = (int(round(self.original_size[0] / Settings.TILE_COUNT[0])),
+                          int(round(self.original_size[1] / Settings.TILE_COUNT[1])))
+
+        self.font = pygame.font.SysFont('Roboto', 10, bold=True)
 
     def draw(self):
         self.surface.fill(self.fill_color)
 
-        # draw border on parent's surface
-        line_width_offset = int(
-            round(self.line_width / 2)) if self.line_width > 1 else self.line_width
-        pygame.draw.rect(self.parent, self.line_color,
-                         (self.pos[0] - line_width_offset,
-                          self.pos[1] - line_width_offset,
-                          self.size[0] + line_width_offset * 2,
-                          self.size[1] + line_width_offset * 2),
-                         self.line_width)
-
         self.draw_grid()
+        self.draw_border()
 
         self.parent.blit(pygame.transform.scale(
             self.surface, self.size), self.pos)
 
-    def draw_grid(self):
-        for x in range(1, Settings.TILE_COUNT[0]):
-            pygame.draw.line(self.surface, self.line_color,
-                             (self.tile_size[0] * x, 0),
-                             (self.tile_size[0] * x, self.original_size[1]),
-                             self.line_width)
+    # Draw a border on surface
+    def draw_border(self):
+        pygame.draw.rect(self.surface, self.line_color,
+                         # pygame.draw.rect(self.surface, Color.ALICE_BLUE,
+                         (0, 0, self.original_size[0], self.original_size[1]),
+                         self.line_width)
 
-        for y in range(1, Settings.TILE_COUNT[1]):
+    def draw_grid(self):
+        for x in range(0, self.original_size[0], self.tile_size[0]):
             pygame.draw.line(self.surface, self.line_color,
-                             (0, self.tile_size[1] * y),
-                             (self.original_size[0], self.tile_size[1] * y),
+                             (x, 0), (x, self.original_size[1]),
                              self.line_width)
+            self.show_text(x=x, text=str(int(round(x / self.tile_size[0]))))
+
+        for y in range(0, self.original_size[1], self.tile_size[1]):
+            pygame.draw.line(self.surface, self.line_color,
+                             (0, y), (self.original_size[0], y),
+                             self.line_width)
+            self.show_text(y=y, text=str(int(round(y / self.tile_size[1]))))
+
+    def show_text(self, x=0, y=0, text=""):
+        text = self.font.render(text, True, self.line_color)
+        text_size = text.get_size()
+        text_x = x + self.tile_size[0] / 2 - (text_size[0] / 2)
+        text_y = y + self.tile_size[0] / 2 - (text_size[1] / 2)
+        self.surface.blit(text, (text_x, text_y))

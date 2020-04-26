@@ -21,10 +21,10 @@ class Program:
         self.change_to_state(State.MENU)
 
     def change_to_state(self, state):
-        if type(state) == type(State.MENU):
-            self.state = State(state, self)
-        else:
+        if isinstance(state, State):
             self.state = state
+        else:
+            self.state = State(state, self)
 
         if self.state == State.PAUSE:
             self.pause()
@@ -74,7 +74,8 @@ class Program:
 
         self.surface_main = pygame.display.set_mode(
             self.settings.WINDOW_SIZE_CURRENT, DOUBLEBUF | RESIZABLE)
-        self.surface_main.fill(self.settings.BACKGROUND_COLOR)
+        # self.surface_main.fill(self.settings.BACKGROUND_COLOR)
+        self.draw()
 
 
 if __name__ == "__main__":

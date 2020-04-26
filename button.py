@@ -8,16 +8,15 @@ class Button:
         self.surface = surface
         self.coords = coords
         self.width, self.height = size
-        # self.bg_color = bg_color
-        self.bg_color = Color.randomColor()
+        self.bg_color = bg_color
         self.border_color = Color.randomColor()
         self.hover_color = Color.shadeColor(self.bg_color, 15)
         self.hovered = False
         self.text = text
         self.function = function
         self.args = args
-        self.font = pygame.font.SysFont('Roboto', Settings.BUTTON_TEXT_SIZE,
-                                        bold=True)
+        self.font = pygame.font.SysFont(
+            'Roboto', Settings.BUTTON_TEXT_SIZE, bold=True)
 
     @property
     def x(self):
@@ -67,41 +66,12 @@ class Button:
 
 
 class ButtonFactory:
-    # @staticmethod
-    # def createButton(surface, coords, bg_color, text, function, *args):
-    #     return Button(surface,
-    #                   coords,
-    #                   110, 40,
-    #                   bg_color,
-    #                   text,
-    #                   function, *args)
+    @staticmethod
+    def createButton(surface, pos, color, text, function, *args):
+        return Button(surface, pos, Settings.BUTTON_SIZE,
+                      color, text, function, *args)
 
     @staticmethod
-    def createPauseButton(surface, text, function, *args):
-        # return ButtonFactory.createButton(surface,
-        return Button(surface,
-                      Settings.BUTTON_POS_TOP_1,
-                      Settings.BUTTON_SIZE,
-                      Color.MEDIUM_BLUE,
-                      text,
-                      function, *args)
-
-    @staticmethod
-    def createStartButton(settings_instance, surface, text, function, *args):
-        # return ButtonFactory.createButton(surface,
-        return Button(surface,
-                      settings_instance.BUTTON_POS_CENTER,
-                      Settings.BUTTON_SIZE,
-                      Color.FOREST_GREEN,
-                      text,
-                      function, *args)
-
-    @staticmethod
-    def createAButton(surface, pos, text, function, *args):
-        # return ButtonFactory.createButton(surface,
-        return Button(surface,
-                      pos,
-                      Settings.BUTTON_SIZE,
-                      Color.MEDIUM_BLUE,
-                      text,
-                      function, *args)
+    def createButtonCentered(settings_instance, surface, color, text, function, *args):
+        return ButtonFactory.createButton(surface, settings_instance.BUTTON_POS_CENTER,
+                                          color, text, function, *args)

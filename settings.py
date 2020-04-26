@@ -4,45 +4,54 @@ from color import Color
 class Settings:
     ##################################### Static #####################################
     MIN_FPS = 10
-    MAX_FPS = 30
+    MAX_FPS = 60
+
+    SCALE = 1
 
     BACKGROUND_COLOR = Color.DIM_GRAY
     BUTTON_TEXT_COLOR = Color.WHITE
     LINE_COLOR = Color.BLACK
+    GAME_BG_COLOR = Color.DIM_DARK_GRAY
 
     WINDOW_TITLE = "NNNavigator"
-    WINDOW_SIZE = (810, 662)
+
+    GAME_DIMENSIONS = (1024, 768)
     LINE_WIDTH = 1
 
-    MARGINS = (int(round(WINDOW_SIZE[0] / 160)),
-               int(round(WINDOW_SIZE[1] / 120)))
+    WINDOW_SIZE = (GAME_DIMENSIONS[0] + LINE_WIDTH * 2,
+                   GAME_DIMENSIONS[1] + 0)
 
-    BUTTON_TEXT_SIZE = int(round(WINDOW_SIZE[1] / 30))
+    MARGINS = (int(round(GAME_DIMENSIONS[0] / 64 * SCALE)),
+               int(round(GAME_DIMENSIONS[1] / 128 * SCALE)))
 
-    BUTTON_SIZE = (int(round(WINDOW_SIZE[0] / 8)),
-                   int(round(WINDOW_SIZE[1] / 15)))
+    # MARGINS = (10, 10)
 
-    BUTTON_POS_TOP_1 = (MARGINS[0] * 2,
-                        MARGINS[1])
-    BUTTON_POS_TOP_2 = (MARGINS[0] * 2 + BUTTON_POS_TOP_1[0] + BUTTON_SIZE[0],
-                        MARGINS[1])
-    BUTTON_POS_TOP_3 = (MARGINS[0] * 2 + BUTTON_POS_TOP_2[0] + BUTTON_SIZE[0],
-                        MARGINS[1])
+    BUTTON_TEXT_SIZE = int(round(GAME_DIMENSIONS[1] / 64 * SCALE))
 
-    # GAME_DIMENSIONS = Settings().GAME_DIMENSIONS_CURRENT()
+    BUTTON_SIZE = (int(round(GAME_DIMENSIONS[0] / 16 * SCALE)),
+                   int(round(GAME_DIMENSIONS[1] / 32 * SCALE)))
+
+    @staticmethod
+    def BUTTON_POS(i):
+        return (Settings.MARGINS[0] * (i + 1) + Settings.BUTTON_SIZE[0] * i,
+                Settings.MARGINS[1])
+
+    BUTTON_BAR_DIMENSIONS = (
+        WINDOW_SIZE[0], MARGINS[1] * 2 + BUTTON_SIZE[1])
+
+    WINDOW_SIZE = (GAME_DIMENSIONS[0],
+                   GAME_DIMENSIONS[1] + BUTTON_BAR_DIMENSIONS[1])
+
+    BUTTON_BAR_POS = (0, 0)
+    GAME_POS = (0, BUTTON_BAR_DIMENSIONS[1] + 0)
+
     TILE_COUNT = (64, 48)
+    # TILE_SIZE = ()
     # TILE_COUNT = (8, 6)
 
-    @property
-    def GAME_POS(self):
-        return (self.MARGINS[0],
-                self.MARGINS[1] * 2 + self.BUTTON_SIZE[1])
-
     # minimum size fits at least one button and a game window of 1x1 px in size
-    @property
-    def WINDOW_SIZE_MINIMUM(self):
-        return (self.GAME_POS[0] * 4 + self.BUTTON_SIZE[0],
-                self.GAME_POS[1] + self.MARGINS[1] + 1)
+    WINDOW_SIZE_MINIMUM = (GAME_POS[0] * 2 + BUTTON_SIZE[0],
+                           BUTTON_BAR_DIMENSIONS[1] + MARGINS[1] + 1)
 
     #################################### Instance ####################################
     def __init__(self):
@@ -50,11 +59,15 @@ class Settings:
 
     def BUTTON_POS_CENTER(self):
         return ((self.WINDOW_SIZE_CURRENT[0] - self.BUTTON_SIZE[0]) / 2,
-                (self.WINDOW_SIZE_CURRENT[1] - self.BUTTON_SIZE[1]) / 2)
+                # (self.WINDOW_SIZE_CURRENT[1] - self.BUTTON_SIZE[1]) / 2)
+                self.MARGINS[1])
+
+    def BUTTON_BAR_DIMENSIONS_CURRENT(self):
+        return self.BUTTON_BAR_DIMENSIONS
 
     def GAME_DIMENSIONS_CURRENT(self):
-        return (self.WINDOW_SIZE_CURRENT[0] - self.MARGINS[0] * 2,
-                self.WINDOW_SIZE_CURRENT[1] - self.MARGINS[1] * 3 - self.BUTTON_SIZE[1])
+        return (self.WINDOW_SIZE_CURRENT[0] - self.GAME_POS[0] * 2,
+                self.WINDOW_SIZE_CURRENT[1] - self.GAME_POS[1])
 
     # @property
     # def TILE_SIZE(self):

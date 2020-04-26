@@ -1,19 +1,30 @@
+import pygame
 import random
+from settings import Settings
 
 
-class GameObject:
-    def __init__(self, color, x=0, y=0, width=1, height=1):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.color = color()
+class GameObject(pygame.sprite.Sprite):
+    def __init__(self, surface, coords, size, color):
+        self.groups = game.all_sprites
+        pygame.sprite.Sprite.__init__(self, self.groups)
+        self.surface = surface
+        self.x, self.y = coords
+        self.width, self.height = size
+        self.color = color
 
+    @property
     def rect(self):
         return (self.x, self.y, self.width, self.height)
 
+    @property
     def coords(self):
         return (self.x, self.y)
+
+    def update(self):
+        pass
+
+    def draw(self):
+        pass
 
     def place_at_random_coords(self, coord_max, coord_min=(0, 0)):
         self.x = random.randint(coord_min[0], coord_max[0] - self.width)

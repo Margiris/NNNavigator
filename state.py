@@ -1,7 +1,7 @@
 import pygame
 from button import Button, ButtonFactory
 from color import Color
-from surface import TiledSurface
+from surface import Surface, TiledScalableSurface
 from settings import Settings
 
 
@@ -18,30 +18,49 @@ class State:
 
         if self == State.MENU:
             self.handle_specific_events = self.handle_events_menu
-            self.buttons.append(ButtonFactory.createStartButton(program.settings, program.surface_main, "Start",
-                                                                program.change_to_state, State.PLAY))
+
+            self.surfaces.append(Surface(program.surface_main,
+                                         program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
+                                         Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
+            #  Settings.BUTTON_BAR_POS, Color.DARK_SLATE_GRAY))
+
+            self.buttons.append(ButtonFactory.createButtonCentered(program.settings, self.surfaces[-1].surface,
+                                                                   Settings.GAME_BG_COLOR, "Start",
+                                                                   program.change_to_state, State.PLAY))
         elif self == State.PLAY:
             self.handle_specific_events = self.handle_events_play
-            self.buttons.append(ButtonFactory.createPauseButton(program.surface_main, "Pause",
-                                                                program.change_to_state, State.PAUSE))
-            # self.buttons.append(ButtonFactory.createStartButton(
-            #     program.surface_main, "Menu", program.change_to_state, self.previous_state))
 
-            self.surfaces.append(TiledSurface(program.surface_main,
-                                              program.settings.GAME_DIMENSIONS_CURRENT, program.settings.GAME_POS,
-                                              Color.DIM_DARK_GRAY, Settings.LINE_COLOR, Settings.LINE_WIDTH))
+            self.surfaces.append(TiledScalableSurface(program.surface_main, Settings.GAME_DIMENSIONS,
+                                                      program.settings.GAME_DIMENSIONS_CURRENT, program.settings.GAME_POS,
+                                                      Color.DIM_DARK_GRAY, Settings.LINE_COLOR, Settings.LINE_WIDTH))
+            self.surfaces.append(Surface(program.surface_main,
+                                         program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
+                                         Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
+            #  Settings.BUTTON_BAR_POS, Color.DARK_SLATE_GRAY))
+
+            self.buttons.append(ButtonFactory.createButton(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
+                                                           Color.MEDIUM_BLUE, "Pause",
+                                                           program.change_to_state, State.PAUSE))
+
         elif self == State.PAUSE:
             self.handle_specific_events = self.handle_events_pause
-            self.buttons.append(ButtonFactory.createPauseButton(program.surface_main, "Resume",
-                                                                program.change_to_state, self.previous_state))
-            self.buttons.append(ButtonFactory.createAButton(program.surface_main,
-                                                            Settings.BUTTON_POS_TOP_2, "A",
-                                                            program.change_to_state, State.PAUSE))
-            self.buttons.append(ButtonFactory.createAButton(program.surface_main,
-                                                            Settings.BUTTON_POS_TOP_3, "B",
-                                                            program.change_to_state, State.PAUSE))
+            # self.surfaces = self.previous_state.surfaces
+            [self.surfaces.append(
+                s) for s in self.previous_state.surfaces if isinstance(s, TiledScalableSurface)]
 
-            self.surfaces = self.previous_state.surfaces
+            self.surfaces.append(Surface(program.surface_main,
+                                         program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
+                                         Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
+
+            self.buttons.append(ButtonFactory.createButton(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
+                                                           Color.MEDIUM_BLUE, "Resume",
+                                                           program.change_to_state, self.previous_state))
+            # self.buttons.append(ButtonFactory.createButton(self.surfaces[-1].surface, Settings.BUTTON_POS(5),
+            #                                                Color.randomColor(), "A",
+            #                                                program.change_to_state, State.PAUSE))
+            # self.buttons.append(ButtonFactory.createButton(self.surfaces[-1].surface, Settings.BUTTON_POS(6),
+            #                                                Color.randomColor(), "B",
+            #                                                program.change_to_state, State.PAUSE))
 
     def update(self):
         for surface in self.surfaces:
@@ -51,9 +70,11 @@ class State:
 
     def draw(self):
         for surface in self.surfaces:
-            surface.draw()
+            surface.surface.fill(surface.fill_color)
         for button in self.buttons:
             button.draw()
+        for surface in self.surfaces:
+            surface.draw()
 
     def __eq__(self, value):
         return self.name == value
