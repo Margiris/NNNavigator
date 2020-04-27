@@ -17,10 +17,10 @@ class GameObject(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
 
         self.isMoveable = isMoveable
-        self.max_velocity = Settings.MAX_VELOCITY
-        self.velocity = 0
+        self.move_ticker = 0
 
     def update(self):
+        self.move_ticker += 1
         self.rect.x = self.x * self.surface.tile_size[0]
         self.rect.y = self.y * self.surface.tile_size[1]
 
@@ -32,14 +32,12 @@ class GameObject(pygame.sprite.Sprite):
         self.y = random.randint(y_min, y_max - self.height)
 
     def move(self, dx=0, dy=0):
-        if self.isMoveable:
+        if self.isMoveable and self.move_ticker > Settings.FRAMES_PER_MOVE:
+            self.move_ticker = 0
             if 0 <= self.x + dx < Settings.TILE_COUNT[0]:
                 self.x += dx
             if 0 <= self.y + dy < Settings.TILE_COUNT[1]:
                 self.y += dy
-
-    def accelerate(self):
-        self.velocity += 2
 
     def to_string(self):
         return str(self.rect) + " " + str(self.color)
