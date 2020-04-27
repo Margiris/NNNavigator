@@ -104,14 +104,18 @@ class State:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p or event.key == pygame.K_SPACE:
                     program.change_to_state(State.PAUSE)
-                if event.key == pygame.K_LEFT:
-                    self.player.move(-1, 0)
-                if event.key == pygame.K_RIGHT:
-                    self.player.move(1, 0)
-                if event.key == pygame.K_UP:
-                    self.player.move(0, -1)
-                if event.key == pygame.K_DOWN:
-                    self.player.move(0, 1)
+                    break
+        move_x, move_y = 0, 0
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            move_x += -1
+        if keys[pygame.K_RIGHT]:
+            move_x += 1
+        if keys[pygame.K_UP]:
+            move_y += -1
+        if keys[pygame.K_DOWN]:
+            move_y += 1
+        self.player.move(move_x, move_y)
 
     def handle_events_pause(self, program, events):
         for event in events:

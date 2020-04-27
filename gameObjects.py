@@ -20,10 +20,6 @@ class GameObject(pygame.sprite.Sprite):
         self.max_velocity = Settings.MAX_VELOCITY
         self.velocity = 0
 
-    # @property
-    # def coords(self):
-    #     return (self.x, self.y)
-
     def update(self):
         self.rect.x = self.x * self.surface.tile_size[0]
         self.rect.y = self.y * self.surface.tile_size[1]

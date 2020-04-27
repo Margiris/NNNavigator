@@ -16,7 +16,7 @@ class Program:
         self.surface_main = pygame.display.set_mode(
             self.settings.WINDOW_SIZE, DOUBLEBUF | RESIZABLE)
         pygame.display.set_caption(self.settings.WINDOW_TITLE)
-        pygame.key.set_repeat(500, 50)
+        # pygame.key.set_repeat(500, 50)
 
         self.state = None
         self.change_to_state(State.PLAY)
@@ -57,8 +57,8 @@ class Program:
             elif event.type == VIDEORESIZE:
                 self.resize(event.dict['size'])
                 self.resize(event.dict['size'])
-            elif event.type == pygame.KEYDOWN:
-                pass
+            # elif event.type == pygame.KEYDOWN:
+            #     pass
 
     def update(self):
         self.state.update()
