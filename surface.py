@@ -39,8 +39,6 @@ class TiledScalableSurface(Surface):
         self.font = pygame.font.SysFont('Roboto', 10, bold=True)
 
     def draw(self):
-        self.surface.fill(self.fill_color)
-
         self.draw_grid()
         self.draw_border()
 

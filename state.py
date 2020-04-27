@@ -1,6 +1,7 @@
 import pygame
 from button import Button, ButtonFactory
 from color import Color
+from gameObjects import Player
 from surface import Surface, TiledScalableSurface
 from settings import Settings
 
@@ -15,6 +16,8 @@ class State:
     def setup_buttons_and_surfaces(self, program):
         self.buttons = []
         self.surfaces = []
+        self.player = None
+        self.sprites = None
 
         if self == State.MENU:
             self.handle_specific_events = self.handle_events_menu
@@ -22,13 +25,13 @@ class State:
             self.surfaces.append(Surface(program.surface_main,
                                          program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
                                          Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
-            #  Settings.BUTTON_BAR_POS, Color.DARK_SLATE_GRAY))
 
             self.buttons.append(ButtonFactory.createButtonCentered(program.settings, self.surfaces[-1].surface,
                                                                    Settings.GAME_BG_COLOR, "Start",
                                                                    program.change_to_state, State.PLAY))
         elif self == State.PLAY:
             self.handle_specific_events = self.handle_events_play
+            self.sprites = pygame.sprite.Group()
 
             self.surfaces.append(TiledScalableSurface(program.surface_main, Settings.GAME_DIMENSIONS,
                                                       program.settings.GAME_DIMENSIONS_CURRENT, program.settings.GAME_POS,
@@ -36,15 +39,15 @@ class State:
             self.surfaces.append(Surface(program.surface_main,
                                          program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
                                          Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
-            #  Settings.BUTTON_BAR_POS, Color.DARK_SLATE_GRAY))
 
             self.buttons.append(ButtonFactory.createButton(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
                                                            Color.MEDIUM_BLUE, "Pause",
                                                            program.change_to_state, State.PAUSE))
-
+            self.player = Player(
+                self.sprites, self.surfaces[0], Color.YELLOW, (0, 0))
         elif self == State.PAUSE:
             self.handle_specific_events = self.handle_events_pause
-            # self.surfaces = self.previous_state.surfaces
+            self.sprites = self.previous_state.sprites
             [self.surfaces.append(
                 s) for s in self.previous_state.surfaces if isinstance(s, TiledScalableSurface)]
 
@@ -67,12 +70,16 @@ class State:
             surface.update()
         for button in self.buttons:
             button.update()
+        if self.sprites:
+            self.sprites.update()
 
     def draw(self):
         for surface in self.surfaces:
             surface.surface.fill(surface.fill_color)
         for button in self.buttons:
             button.draw()
+        if self.sprites:
+            self.sprites.draw(self.surfaces[0].surface)
         for surface in self.surfaces:
             surface.draw()
 
@@ -97,12 +104,21 @@ class State:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p or event.key == pygame.K_SPACE:
                     program.change_to_state(State.PAUSE)
+                if event.key == pygame.K_LEFT:
+                    self.player.move(-1, 0)
+                if event.key == pygame.K_RIGHT:
+                    self.player.move(1, 0)
+                if event.key == pygame.K_UP:
+                    self.player.move(0, -1)
+                if event.key == pygame.K_DOWN:
+                    self.player.move(0, 1)
 
     def handle_events_pause(self, program, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_p or event.key == pygame.K_SPACE:
                     program.change_to_state(self.previous_state)
+                    break
 
     MENU = "menu"
     PLAY = "play"

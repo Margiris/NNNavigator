@@ -4,76 +4,73 @@ from settings import Settings
 
 
 class GameObject(pygame.sprite.Sprite):
-    def __init__(self, surface, coords, size, color):
-        self.groups = game.all_sprites
+    def __init__(self, all_sprites, surface, color, coords, size, isMoveable):
+        self.groups = all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.surface = surface
+        self.image = pygame.Surface((size[0] * self.surface.tile_size[0],
+                                     size[1] * self.surface.tile_size[1]))
         self.x, self.y = coords
         self.width, self.height = size
         self.color = color
+        self.image.fill(self.color)
+        self.rect = self.image.get_rect()
 
-    @property
-    def rect(self):
-        return (self.x, self.y, self.width, self.height)
+        self.isMoveable = isMoveable
+        self.max_velocity = Settings.MAX_VELOCITY
+        self.velocity = 0
 
-    @property
-    def coords(self):
-        return (self.x, self.y)
+    # @property
+    # def coords(self):
+    #     return (self.x, self.y)
 
     def update(self):
-        pass
+        self.rect.x = self.x * self.surface.tile_size[0]
+        self.rect.y = self.y * self.surface.tile_size[1]
 
     def draw(self):
         pass
 
-    def place_at_random_coords(self, coord_max, coord_min=(0, 0)):
-        self.x = random.randint(coord_min[0], coord_max[0] - self.width)
-        self.y = random.randint(coord_min[1], coord_max[1] - self.height)
+    def place_at_random_coords(self, x_max, y_max, x_min=0, y_min=0):
+        self.x = random.randint(x_min, x_max - self.width)
+        self.y = random.randint(y_min, y_max - self.height)
 
-    def to_string(self):
-        return str(self.x) + " " + str(self.y) + " " + str(self.width) + " " + str(self.height) + " " + str(self.color)
-
-
-class Moveable:
-    def __init__(self, max_vel):
-        self.max_velocity = max_vel
-        self.velocity = 0
-
-    def move(self, direction):
-        if self.velocity < self.max_velocity:
-            self.accelerate()
+    def move(self, dx=0, dy=0):
+        if self.isMoveable:
+            if 0 <= self.x + dx < Settings.TILE_COUNT[0]:
+                self.x += dx
+            if 0 <= self.y + dy < Settings.TILE_COUNT[1]:
+                self.y += dy
 
     def accelerate(self):
         self.velocity += 2
 
+    def to_string(self):
+        return str(self.rect) + " " + str(self.color)
+
 
 class Goal(GameObject):
-    def __init__(self, color, x=0, y=0, width=1, height=1):
-        super().__init__(color, x, y, width, height)
+    def __init__(self, all_sprites, surface, color, coords, size=(1, 1)):
+        super().__init__(all_sprites, surface, color, coords, size, False)
 
 
-class Player(GameObject, Moveable):
-    def __init__(self, color, x=0, y=0, width=1, height=1):
-        super().__init__(color, x, y, width, height)
+class Player(GameObject):
+    def __init__(self, all_sprites, surface, color, coords, size=(1, 1)):
+        super().__init__(all_sprites, surface, color, coords, size, True)
         self.is_alive = False
 
 
 class Wall(GameObject):
-    def __init__(self, color, x=0, y=0, width=1, height=1):
-        super().__init__(color, x, y, width, height)
+    def __init__(self, all_sprites, surface, color, coords, size, isMoveable):
+        super().__init__(all_sprites, surface, color, coords, size, isMoveable)
 
-    def get_random(self, coord_max, tile_count=1):
-        self.width = random.randint(1, coord_max[0] / tile_count)
-        self.height = random.randint(1, coord_max[1] / tile_count)
+    def get_random(self, x_max, y_max, tile_count=1):
+        self.width = random.randint(1, x_max)
+        self.height = random.randint(1, y_max)
 
         if self.height > self.width:
-            self.width = 10
+            self.width = 1
         else:
-            self.height = 10
+            self.height = 1
 
-        self.place_at_random_coords(coord_max)
-
-
-class WallMoveable(Wall, Moveable):
-    def __init__(self, x, y, width, height, color):
-        super().__init__(x, y, width, height, color)
+        self.place_at_random_coords(x_max, y_max)

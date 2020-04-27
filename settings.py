@@ -6,6 +6,8 @@ class Settings:
     MIN_FPS = 10
     MAX_FPS = 60
 
+    MAX_VELOCITY = 10
+
     SCALE = 1
 
     BACKGROUND_COLOR = Color.DIM_GRAY
