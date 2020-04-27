@@ -1,7 +1,7 @@
 import pygame
 from button import Button, ButtonFactory
 from color import Color
-from gameObjects import Player
+from gameObjects import Player, Wall
 from surface import Surface, TiledScalableSurface
 from settings import Settings
 
@@ -17,7 +17,8 @@ class State:
         self.buttons = []
         self.surfaces = []
         self.player = None
-        self.sprites = None
+        self.all_sprites = None
+        self.wall_sprites = None
 
         if self == State.MENU:
             self.handle_specific_events = self.handle_events_menu
@@ -31,7 +32,8 @@ class State:
                                                                    program.change_to_state, State.PLAY))
         elif self == State.PLAY:
             self.handle_specific_events = self.handle_events_play
-            self.sprites = pygame.sprite.Group()
+            self.all_sprites = pygame.sprite.Group()
+            self.wall_sprites = pygame.sprite.Group()
 
             self.surfaces.append(TiledScalableSurface(program.surface_main, Settings.GAME_DIMENSIONS,
                                                       program.settings.GAME_DIMENSIONS_CURRENT, program.settings.GAME_POS,
@@ -44,10 +46,16 @@ class State:
                                                            Color.MEDIUM_BLUE, "Pause",
                                                            program.change_to_state, State.PAUSE))
             self.player = Player(
-                self.sprites, self.surfaces[0], Color.YELLOW, (0, 0))
+                (self.all_sprites), self.surfaces[0].tile_size, Color.YELLOW, (0, 0), walls=self.wall_sprites)
+
+            for i in range(10, 20):
+                Wall((self.all_sprites, self.wall_sprites),
+                     self.surfaces[0].tile_size, Color.STEEL_BLUE, (i, 5))
         elif self == State.PAUSE:
             self.handle_specific_events = self.handle_events_pause
-            self.sprites = self.previous_state.sprites
+            self.all_sprites = self.previous_state.all_sprites
+            self.wall_sprites = self.previous_state.wall_sprites
+
             [self.surfaces.append(
                 s) for s in self.previous_state.surfaces if isinstance(s, TiledScalableSurface)]
 
@@ -70,16 +78,16 @@ class State:
             surface.update()
         for button in self.buttons:
             button.update()
-        if self.sprites:
-            self.sprites.update()
+        if self.all_sprites:
+            self.all_sprites.update()
 
     def draw(self):
         for surface in self.surfaces:
             surface.surface.fill(surface.fill_color)
         for button in self.buttons:
             button.draw()
-        if self.sprites:
-            self.sprites.draw(self.surfaces[0].surface)
+        if self.all_sprites:
+            self.all_sprites.draw(self.surfaces[0].surface)
         for surface in self.surfaces:
             surface.draw()
 
@@ -102,6 +110,8 @@ class State:
     def handle_events_play(self, program, events):
         for event in events:
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_a:
+                    self.player.is_alive = not self.player.is_alive
                 if event.key == pygame.K_p or event.key == pygame.K_SPACE:
                     program.change_to_state(State.PAUSE)
                     break

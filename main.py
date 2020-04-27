@@ -80,5 +80,5 @@ class Program:
 
 
 if __name__ == "__main__":
-    snake = Program()
-    snake.run()
+    NNNavigator = Program()
+    NNNavigator.run()
