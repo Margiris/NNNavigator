@@ -87,8 +87,8 @@ class Wall(GameObject):
     def __init__(self, sprite_groups, tile_size, color, coords, size=(1, 1), is_movable=False,
                  fpm=Settings.FRAMES_PER_MOVE, movement_range=(0, 0)):
         super().__init__(sprite_groups, tile_size, color, coords, size, is_movable, fpm)
-        self.move_dir = 1
         self.curr_pos, self.max_pos = movement_range
+        self.move_dir = 1 if self.max_pos < 0 else -1
 
     def update(self):
         if self.is_movable and self.move_ticker > self.frames_per_move:
@@ -96,12 +96,13 @@ class Wall(GameObject):
         return super().update()
 
     def automover(self):
-        self.curr_pos += self.move_dir
+        # print(self.curr_pos, self.max_pos)
         if self.max_pos > 0:
-            self.move(self.move_dir, 0)
             if self.curr_pos <= 0 or self.curr_pos >= self.max_pos:
                 self.move_dir = 0 - self.move_dir
+            self.move(self.move_dir, 0)
         elif self.max_pos < 0:
-            self.move(0, self.move_dir)
             if self.curr_pos >= 0 or self.curr_pos <= self.max_pos:
                 self.move_dir = 0 - self.move_dir
+            self.move(0, 0 - self.move_dir)
+        self.curr_pos += self.move_dir

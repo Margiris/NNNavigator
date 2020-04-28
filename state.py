@@ -142,22 +142,23 @@ class State:
 
     def spawn_random_walls(self):
         for axis in range(0, 2):
-            tile_count = Settings.TILE_COUNT[1 - axis]
+            tile_count = Settings.TILE_COUNT[axis]
 
-            for line in range(0, tile_count - 1):
-                chance = random()
-
-                if chance < Settings.WALL_SPAWN_RATE:
+            for line in range(0, Settings.TILE_COUNT[1 - axis] - 1):
+                if random() < Settings.WALL_SPAWN_RATE:
                     random_spot = randint(0, tile_count - 1)
                     length = randint(
-                        0, int((tile_count - 1) * chance))
+                        0, int((tile_count - 1) * random()))
                     space_left = tile_count - random_spot - length
+                    min_movement = 10
 
-                    if random() < Settings.MOVING_WALL_SPAWN_RATE and space_left > 1:
+                    if random() < Settings.MOVING_WALL_SPAWN_RATE and space_left > min_movement:
                         color = Color.CORN_FLOWER_BLUE
                         movable = True
-                        movement_range = (0, randint(
-                            1, space_left) if axis == 0 else 0 - randint(1, space_left))
+                        upper = randint(min_movement, space_left)
+                        movement_range = (0, upper if axis == 0 else 0 - upper)
+                        # print(movement_range, (random_spot, line)
+                        #       if axis == 0 else (line, random_spot))
                     else:
                         color = Color.STEEL_BLUE
                         movable = False
@@ -165,7 +166,7 @@ class State:
 
                     for i in range(random_spot, random_spot + length):
                         Wall((self.all_sprites, self.wall_sprites), self.surfaces[0].tile_size, color, (i, line) if axis == 0 else (
-                            line, i), is_movable=movable, fpm=30, movement_range=movement_range)
+                            line, i), is_movable=movable, fpm=1, movement_range=movement_range)
 
     MENU = "menu"
     PLAY = "play"
