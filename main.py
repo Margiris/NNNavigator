@@ -1,8 +1,5 @@
 import pygame
-import sys
 from pygame.locals import *
-from button import Button
-from color import Color
 from settings import Settings
 from state import State
 

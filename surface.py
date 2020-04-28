@@ -1,5 +1,4 @@
 import pygame
-from color import Color
 from settings import Settings
 
 
@@ -47,7 +46,6 @@ class TiledScalableSurface(Surface):
     # Draw a border on surface
     def draw_border(self):
         pygame.draw.rect(self.surface, self.line_color,
-                         # pygame.draw.rect(self.surface, Color.ALICE_BLUE,
                          (0, 0, self.original_size[0], self.original_size[1]),
                          self.line_width)
 

@@ -4,7 +4,7 @@ from settings import Settings
 
 
 class GameObject(pygame.sprite.Sprite):
-    def __init__(self, sprite_groups, tile_size, color, coords, size, is_moveable=False, fpm=Settings.FRAMES_PER_MOVE):
+    def __init__(self, sprite_groups, tile_size, color, coords, size, is_movable=False, fpm=Settings.FRAMES_PER_MOVE):
         self.groups = sprite_groups
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.tile_size = tile_size
@@ -15,13 +15,13 @@ class GameObject(pygame.sprite.Sprite):
         self.color = color
         self.rect = self.image.get_rect()
 
-        self.is_moveable = is_moveable
+        self.is_movable = is_movable
         self.frames_per_move = fpm
         self.move_ticker = 0
 
     def update(self):
         self.image.fill(self.color)
-        if self.is_moveable:
+        if self.is_movable:
             self.move_ticker += 1
         self.rect.x = self.x * self.tile_size[0]
         self.rect.y = self.y * self.tile_size[1]
@@ -30,7 +30,7 @@ class GameObject(pygame.sprite.Sprite):
         pass
 
     def move(self, dx=0, dy=0):
-        if self.is_moveable and self.move_ticker > self.frames_per_move:
+        if self.is_movable and self.move_ticker > self.frames_per_move:
             self.move_ticker = 0
             if 0 <= self.x + dx < Settings.TILE_COUNT[0]:
                 self.x += dx
@@ -84,13 +84,14 @@ class Player(GameObject):
 
 
 class Wall(GameObject):
-    def __init__(self, sprite_groups, tile_size, color, coords, size=(1, 1), isMoveable=False, fpm=Settings.FRAMES_PER_MOVE, movement_range=(0, 0)):
-        super().__init__(sprite_groups, tile_size, color, coords, size, isMoveable, fpm)
+    def __init__(self, sprite_groups, tile_size, color, coords, size=(1, 1), is_movable=False,
+                 fpm=Settings.FRAMES_PER_MOVE, movement_range=(0, 0)):
+        super().__init__(sprite_groups, tile_size, color, coords, size, is_movable, fpm)
         self.move_dir = 1
         self.curr_pos, self.max_pos = movement_range
 
     def update(self):
-        if self.is_moveable and self.move_ticker > self.frames_per_move:
+        if self.is_movable and self.move_ticker > self.frames_per_move:
             self.automover()
         return super().update()
 

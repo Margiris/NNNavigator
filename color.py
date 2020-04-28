@@ -1,15 +1,15 @@
 class Color:
     @staticmethod
-    def shadeColor(color, percent):
+    def shade_color(color, percent):
         t = 0 if percent < 0 else 255
         p = (percent * -1 if percent < 0 else percent) / 100
-        R, G, B = color
-        return (round((t - R) * p) + R,
-                round((t - G) * p) + G,
-                round((t - B) * p) + B)
+        r, g, b = color
+        return (round((t - r) * p) + r,
+                round((t - g) * p) + g,
+                round((t - b) * p) + b)
 
     @staticmethod
-    def randomColor():
+    def random_color():
         from random import randint
         colors = [value for _, value in Color.__dict__.items()
                   if type(value) is tuple]

@@ -7,8 +7,8 @@ class Settings:
     MAX_FPS = 60
     FRAMES_PER_MOVE = 5
 
-    WALL_SPAWN_RATE = 1/2
-    MOVING_WALL_SPAWN_RATE = 1.2
+    WALL_SPAWN_RATE = 0.5
+    MOVING_WALL_SPAWN_RATE = 0.1
 
     MAX_VELOCITY = 10
 

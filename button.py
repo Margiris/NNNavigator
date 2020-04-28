@@ -9,8 +9,8 @@ class Button:
         self.coords = coords
         self.width, self.height = size
         self.bg_color = bg_color
-        self.border_color = Color.randomColor()
-        self.hover_color = Color.shadeColor(self.bg_color, 15)
+        self.border_color = Color.random_color()
+        self.hover_color = Color.shade_color(self.bg_color, 15)
         self.hovered = False
         self.text = text
         self.function = function
@@ -28,7 +28,7 @@ class Button:
 
     @property
     def coords_4(self):
-        return (self.x, self.y, self.width, self.height)
+        return self.x, self.y, self.width, self.height
 
     def update(self):
         cursor = pygame.mouse.get_pos()
@@ -46,13 +46,13 @@ class Button:
             border_color = None
 
         pygame.draw.rect(self.surface, color, self.coords_4)
-        if border_color != None:
+        if border_color is not None:
             pygame.draw.rect(self.surface, self.border_color, self.coords_4, 2)
 
         self.show_text()
 
     def show_text(self):
-        if self.text != None:
+        if self.text is not None:
             string = str(self.text() if callable(self.text) else self.text)
             text = self.font.render(
                 string, True, Color.WHITE)
@@ -62,17 +62,17 @@ class Button:
             self.surface.blit(text, (text_x, text_y))
 
     def click(self):
-        if self.function != None and callable(self.function):
+        if self.function is not None and callable(self.function):
             self.function(*self.args)
 
 
 class ButtonFactory:
     @staticmethod
-    def createButton(surface, pos, color, text, function, *args):
+    def create_button(surface, pos, color, text, function, *args):
         return Button(surface, pos, Settings.BUTTON_SIZE,
                       color, text, function, *args)
 
     @staticmethod
-    def createButtonCentered(settings_instance, surface, color, text, function, *args):
-        return ButtonFactory.createButton(surface, settings_instance.BUTTON_POS_CENTER,
-                                          color, text, function, *args)
+    def create_button_centered(settings_instance, surface, color, text, function, *args):
+        return ButtonFactory.create_button(surface, settings_instance.BUTTON_POS_CENTER,
+                                           color, text, function, *args)
