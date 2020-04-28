@@ -142,11 +142,12 @@ class State:
             self.all_sprites.remove(wall)
             self.wall_sprites.remove(wall)
         self.spawn_random_walls()
-        random_x, random_y = randint(0, Settings.TILE_COUNT[0]), randint(
-            0, Settings.TILE_COUNT[1])
-        for player in self.player_sprites:
-            player.resurrect()
-            player.move(random_x - player.x, random_y - player.y)
+        while any([not player.is_alive for player in self.player_sprites]):
+            random_x = randint(0, Settings.TILE_COUNT[0] - 1)
+            random_y = randint(0, Settings.TILE_COUNT[1] - 1)
+            for player in self.player_sprites:
+                player.resurrect()
+                player.move(random_x - player.x, random_y - player.y)
 
     def spawn_random_walls(self):
         min_movement = 2

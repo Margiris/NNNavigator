@@ -53,17 +53,6 @@ class Player(GameObject):
         self.walls = walls
         self.original_color = color
 
-    def is_alive_now(self):
-        return "Alive" if self.is_alive else "Dead"
-
-    def die(self):
-        self.is_alive = False
-        self.color = Color.BLACK
-
-    def resurrect(self):
-        self.is_alive = True
-        self.color = self.original_color
-
     def update(self):
         if self.collides_with_wall(self.x, self.y):
             self.die()
@@ -75,6 +64,17 @@ class Player(GameObject):
                 self.die()
             else:
                 super().move(dx, dy)
+
+    def is_alive_now(self):
+        return "Alive" if self.is_alive else "Dead"
+
+    def die(self):
+        self.is_alive = False
+        self.color = Color.BLACK
+
+    def resurrect(self):
+        self.is_alive = True
+        self.color = self.original_color
 
     def collides_with_wall(self, x, y):
         for wall in self.walls:
