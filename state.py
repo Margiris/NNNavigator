@@ -1,5 +1,7 @@
 import pygame
 from random import randint, random
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
 from button import ButtonFactory
 from color import Color
 from gameObjects import Player, Wall
@@ -9,7 +11,6 @@ from settings import Settings
 
 class State:
     def __init__(self, name, program):
-        self.enum = []
         self.name = name
         self.previous_state = program.state
         self.buttons = []
@@ -71,17 +72,19 @@ class State:
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
                                                             Color.MEDIUM_BLUE, "Resume",
                                                             program.change_to_state, self.previous_state))
-            # self.buttons.append(ButtonFactory.createButton(self.surfaces[-1].surface, Settings.BUTTON_POS(6),
-            #                                                Color.randomColor(), "B",
-            #                                                program.change_to_state, State.PAUSE))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(8),
+                                                            Color.INDIGO, "Load", self.load_state))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(9),
+                                                            Color.FOREST_GREEN, "Save", self.save_state))
 
     def update(self):
         for surface in self.surfaces:
             surface.update()
         for button in self.buttons:
             button.update()
-        if self.all_sprites:
-            self.all_sprites.update()
+        if self != State.PAUSE:
+            if self.all_sprites:
+                self.all_sprites.update()
 
     def draw(self):
         for surface in self.surfaces:
@@ -179,6 +182,22 @@ class State:
                     for i in range(random_spot, random_spot + length):
                         Wall((self.all_sprites, self.wall_sprites), self.surfaces[0].tile_size, color, (i, line) if axis == 0 else (
                             line, i), is_movable=movable, fpm=speed, movement_range=movement_range)
+
+    def spawn_from_file(self, map_data):
+        pass
+
+    def load_state(self):
+        Tk().withdraw()
+        map_file = askopenfilename()
+
+        map_data = []
+        with open(map_file, 'rt') as f:
+            map_data = f.readlines()
+
+        self.spawn_from_file(map_data)
+
+    def save_state(self):
+        pass
 
     MENU = "menu"
     PLAY = "play"
