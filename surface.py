@@ -20,8 +20,9 @@ class Surface:
         pass
 
     def draw(self):
-        # self.surface.fill(self.fill_color)
+        self.surface.fill(self.fill_color)
 
+    def blit(self):
         self.parent.blit(pygame.transform.scale(
             self.surface, self.size), self.pos)
 
@@ -39,11 +40,9 @@ class TiledScalableSurface(Surface):
         self.font = pygame.font.SysFont('Roboto', 10, bold=True)
 
     def draw(self):
+        self.surface.fill(self.fill_color)
         self.draw_grid()
         self.draw_border()
-
-        self.parent.blit(pygame.transform.scale(
-            self.surface, self.size), self.pos)
 
     # Draw a border on surface
     def draw_border(self):

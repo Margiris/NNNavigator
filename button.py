@@ -53,8 +53,9 @@ class Button:
 
     def show_text(self):
         if self.text != None:
+            string = str(self.text() if callable(self.text) else self.text)
             text = self.font.render(
-                self.text, True, Color.WHITE)
+                string, True, Color.WHITE)
             text_size = text.get_size()
             text_x = self.x + (self.width / 2) - (text_size[0] / 2)
             text_y = self.y + (self.height / 2) - (text_size[1] / 2)
