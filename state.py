@@ -42,12 +42,11 @@ class State:
                                          program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
                                          Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
 
-            self.main_player = Player(
-                (self.all_sprites, self.player_sprites), self.surfaces[0].tile_size, Color.YELLOW, (0, 0), walls=self.wall_sprites)
-
             for _ in range(0, 10):
                 Player((self.all_sprites, self.player_sprites),
-                       self.surfaces[0].tile_size, Color.LIGHT_YELLOW, (10, 8), walls=self.wall_sprites)
+                       self.surfaces[0].tile_size, Color.PURPLE, (10, 8), walls=self.wall_sprites)
+            self.main_player = Player(
+                (self.all_sprites, self.player_sprites), self.surfaces[0].tile_size, Color.YELLOW, (0, 0), walls=self.wall_sprites)
 
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
                                                             Color.MEDIUM_BLUE, "Pause",
@@ -114,7 +113,7 @@ class State:
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
-                    self.main_player.resurrect()
+                    self.restart()
                 if event.key == pygame.K_p or event.key == pygame.K_SPACE:
                     program.change_to_state(State.PAUSE)
                     break
@@ -128,7 +127,8 @@ class State:
             move_y += -1
         if keys[pygame.K_DOWN]:
             move_y += 1
-        self.main_player.move(move_x, move_y)
+        if move_x or move_y:
+            self.main_player.move(move_x, move_y)
 
     def handle_events_pause(self, program, events):
         for event in events:
@@ -142,6 +142,8 @@ class State:
             self.all_sprites.remove(wall)
             self.wall_sprites.remove(wall)
         self.spawn_random_walls()
+
+        [p.die() for p in self.player_sprites]
         while any([not player.is_alive for player in self.player_sprites]):
             random_x = randint(0, Settings.TILE_COUNT[0] - 1)
             random_y = randint(0, Settings.TILE_COUNT[1] - 1)

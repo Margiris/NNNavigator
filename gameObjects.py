@@ -30,6 +30,8 @@ class GameObject(pygame.sprite.Sprite):
         pass
 
     def move(self, dx=0, dy=0):
+        if dx > 1:
+            print("moved.", self.move_ticker, self.frames_per_move)
         if self.is_movable and self.move_ticker > self.frames_per_move:
             self.move_ticker = 0
             if 0 <= self.x + dx < Settings.TILE_COUNT[0]:
@@ -65,8 +67,8 @@ class Player(GameObject):
             else:
                 super().move(dx, dy)
 
-    def is_alive_now(self):
-        return "Alive" if self.is_alive else "Dead"
+    # def is_alive_now(self):
+    #     return "Alive" if self.is_alive else "Dead"
 
     def die(self):
         self.is_alive = False
