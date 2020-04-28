@@ -96,7 +96,6 @@ class Wall(GameObject):
         return super().update()
 
     def automover(self):
-        # print(self.curr_pos, self.max_pos)
         if self.max_pos > 0:
             if self.curr_pos <= 0 or self.curr_pos >= self.max_pos:
                 self.move_dir = 0 - self.move_dir

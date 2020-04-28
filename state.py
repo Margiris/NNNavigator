@@ -12,13 +12,11 @@ class State:
         self.enum = []
         self.name = name
         self.previous_state = program.state
-        self.setup_buttons_sprites_and_surfaces(program)
-
-    def setup_buttons_sprites_and_surfaces(self, program):
         self.buttons = []
         self.surfaces = []
-        self.player = None
+        self.main_player = None
         self.all_sprites = None
+        self.player_sprites = None
         self.wall_sprites = None
 
         if self == State.MENU:
@@ -34,6 +32,7 @@ class State:
         elif self == State.PLAY:
             self.handle_specific_events = self.handle_events_play
             self.all_sprites = pygame.sprite.Group()
+            self.player_sprites = pygame.sprite.Group()
             self.wall_sprites = pygame.sprite.Group()
 
             self.surfaces.append(TiledScalableSurface(program.surface_main, Settings.GAME_DIMENSIONS,
@@ -43,15 +42,19 @@ class State:
                                          program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
                                          Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
 
-            self.player = Player(
-                self.all_sprites, self.surfaces[0].tile_size, Color.YELLOW, (0, 0), walls=self.wall_sprites)
+            self.main_player = Player(
+                (self.all_sprites, self.player_sprites), self.surfaces[0].tile_size, Color.YELLOW, (0, 0), walls=self.wall_sprites)
+
+            for _ in range(0, 10):
+                Player((self.all_sprites, self.player_sprites),
+                       self.surfaces[0].tile_size, Color.LIGHT_YELLOW, (10, 8), walls=self.wall_sprites)
 
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
                                                             Color.MEDIUM_BLUE, "Pause",
                                                             program.change_to_state, State.PAUSE))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(5),
-                                                            Color.NAVY, "Respawn w",
-                                                            self.respawn_random_walls))
+                                                            Color.NAVY, "Restart",
+                                                            self.restart))
             self.spawn_random_walls()
 
         elif self == State.PAUSE:
@@ -111,7 +114,7 @@ class State:
         for event in events:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
-                    self.player.resurrect()
+                    self.main_player.resurrect()
                 if event.key == pygame.K_p or event.key == pygame.K_SPACE:
                     program.change_to_state(State.PAUSE)
                     break
@@ -125,7 +128,7 @@ class State:
             move_y += -1
         if keys[pygame.K_DOWN]:
             move_y += 1
-        self.player.move(move_x, move_y)
+        self.main_player.move(move_x, move_y)
 
     def handle_events_pause(self, program, events):
         for event in events:
@@ -134,39 +137,45 @@ class State:
                     program.change_to_state(self.previous_state)
                     break
 
-    def respawn_random_walls(self):
+    def restart(self):
         for wall in self.wall_sprites:
             self.all_sprites.remove(wall)
             self.wall_sprites.remove(wall)
         self.spawn_random_walls()
+        random_x, random_y = randint(0, Settings.TILE_COUNT[0]), randint(
+            0, Settings.TILE_COUNT[1])
+        for player in self.player_sprites:
+            player.resurrect()
+            player.move(random_x - player.x, random_y - player.y)
 
     def spawn_random_walls(self):
-        for axis in range(0, 2):
+        min_movement = 2
+        min_length = 3
+        for times in range(0, 4):
+            axis = times % 2
             tile_count = Settings.TILE_COUNT[axis]
 
             for line in range(0, Settings.TILE_COUNT[1 - axis] - 1):
                 if random() < Settings.WALL_SPAWN_RATE:
                     random_spot = randint(0, tile_count - 1)
-                    length = randint(
-                        0, int((tile_count - 1) * random()))
+                    length = randint(min_length,
+                                     min_length + int((tile_count - 1) * random() / 2))
                     space_left = tile_count - random_spot - length
-                    min_movement = 10
 
                     if random() < Settings.MOVING_WALL_SPAWN_RATE and space_left > min_movement:
                         color = Color.CORN_FLOWER_BLUE
                         movable = True
-                        upper = randint(min_movement, space_left)
-                        movement_range = (0, upper if axis == 0 else 0 - upper)
-                        # print(movement_range, (random_spot, line)
-                        #       if axis == 0 else (line, random_spot))
+                        movement_range = (0, randint(
+                            min_movement, space_left) if axis == 0 else 0 - randint(min_movement, space_left))
                     else:
                         color = Color.STEEL_BLUE
                         movable = False
                         movement_range = (0, 0)
 
+                    speed = randint(1, Settings.MAX_FPS)
                     for i in range(random_spot, random_spot + length):
                         Wall((self.all_sprites, self.wall_sprites), self.surfaces[0].tile_size, color, (i, line) if axis == 0 else (
-                            line, i), is_movable=movable, fpm=1, movement_range=movement_range)
+                            line, i), is_movable=movable, fpm=speed, movement_range=movement_range)
 
     MENU = "menu"
     PLAY = "play"

@@ -7,10 +7,8 @@ class Settings:
     MAX_FPS = 60
     FRAMES_PER_MOVE = 5
 
-    WALL_SPAWN_RATE = 0.5
-    MOVING_WALL_SPAWN_RATE = 0.1
-
-    MAX_VELOCITY = 10
+    WALL_SPAWN_RATE = 0.2
+    MOVING_WALL_SPAWN_RATE = WALL_SPAWN_RATE * 0.8
 
     SCALE = 1
 
@@ -29,8 +27,6 @@ class Settings:
 
     MARGINS = (int(round(GAME_DIMENSIONS[0] / 64 * SCALE)),
                int(round(GAME_DIMENSIONS[1] / 128 * SCALE)))
-
-    # MARGINS = (10, 10)
 
     BUTTON_TEXT_SIZE = int(round(GAME_DIMENSIONS[1] / 64 * SCALE))
 
