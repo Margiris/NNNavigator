@@ -67,9 +67,6 @@ class Player(GameObject):
             else:
                 super().move(dx, dy)
 
-    # def is_alive_now(self):
-    #     return "Alive" if self.is_alive else "Dead"
-
     def die(self):
         self.is_alive = False
         self.color = Color.BLACK
