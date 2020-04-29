@@ -50,12 +50,17 @@ class State:
             self.main_player = Player(
                 (self.all_sprites, self.player_sprites), self.surfaces[0].tile_size, Color.YELLOW, (0, 0), walls=self.wall_sprites)
 
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(10),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(5),
                                                             Color.MEDIUM_BLUE, "Pause",
                                                             program.change_to_state, State.PAUSE))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(5),
-                                                            Color.NAVY, "Restart",
-                                                            self.restart))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(6),
+                                                            Color.INDIGO, "Load", self.load_state))
+            self.buttons[-1].active = False
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(7),
+                                                            Color.FOREST_GREEN, "Save", self.save_state))
+            self.buttons[-1].active = False
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(10),
+                                                            Color.NAVY, "Restart", self.restart))
             self.spawn_random_walls()
         elif self == State.PAUSE:
             self.handle_specific_events = self.handle_events_pause
@@ -70,13 +75,16 @@ class State:
                                          program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
                                          Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
 
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(10),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(5),
                                                             Color.MEDIUM_BLUE, "Resume",
                                                             program.change_to_state, self.previous_state))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(8),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(6),
                                                             Color.INDIGO, "Load", self.load_state))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(9),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(7),
                                                             Color.FOREST_GREEN, "Save", self.save_state))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(10),
+                                                            Color.NAVY, "Restart", self.restart))
+            self.buttons[-1].active = False
 
     def update(self):
         for surface in self.surfaces:
@@ -111,7 +119,6 @@ class State:
 
     def handle_events_menu(self, program, events):
         pass
-        # for event in events:
 
     def handle_events_play(self, program, events):
         for event in events:
@@ -184,14 +191,14 @@ class State:
                         Wall((self.all_sprites, self.wall_sprites), self.surfaces[0].tile_size, color, (i, line) if axis == 0 else (
                             line, i), is_movable=movable, fpm=speed, movement_range=movement_range)
 
-    def spawn_from_line(self, obj_data):
+    def spawn_from_string(self, obj_data):
         props = obj_data.split(Settings.PROP_SEP)
         color = tuple(int(c) for c in props[1].split(','))
         if props[0] == "P":
             self.previous_state.main_player = Player((self.all_sprites, self.player_sprites), self.surfaces[0].tile_size, color, (int(props[2]), int(
                 props[3])), (int(props[4]), int(props[5])), walls=self.wall_sprites, fpm=int(props[7]), move_ticks=int(props[8]))
             if props[9] != "True":
-                self.main_player.die()
+                self.previous_state.main_player.die()
         elif props[0] == "W":
             Wall((self.all_sprites, self.wall_sprites), self.surfaces[0].tile_size, color, (int(props[2]), int(
                 props[3])), (int(props[4]), int(props[5])), is_movable=props[6] == "True", fpm=int(props[7]), move_ticks=int(props[8]), movement_range=(int(props[9]), int(props[10])), move_dir=int(props[11]))
@@ -212,7 +219,7 @@ class State:
             self.wall_sprites.remove(wall)
 
         for line in f:
-            self.spawn_from_line(line)
+            self.spawn_from_string(line)
 
         f.close()
 

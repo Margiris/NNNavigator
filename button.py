@@ -10,9 +10,13 @@ class Button:
         self.width, self.height = size
         self.bg_color = bg_color
         self.border_color = Color.random_color()
-        self.hover_color = Color.shade_color(self.bg_color, 15)
+        self.hover_color = Color.shade_color(
+            self.bg_color, Settings.COLOR_SHADE / 2)
+        self.inactive_color = Color.shade_color(
+            self.bg_color, 0 - Settings.COLOR_SHADE)
         self.hovered = False
         self.text = text
+        self.active = True
         self.function = function
         self.args = args
         self.font = pygame.font.SysFont(
@@ -31,14 +35,18 @@ class Button:
         return self.x, self.y, self.width, self.height
 
     def update(self):
-        cursor = pygame.mouse.get_pos()
-        if self.x < cursor[0] < self.x + self.width and self.y < cursor[1] < self.y + self.height:
-            self.hovered = True
-        else:
-            self.hovered = False
+        if self.active:
+            cursor = pygame.mouse.get_pos()
+            if self.x < cursor[0] < self.x + self.width and self.y < cursor[1] < self.y + self.height:
+                self.hovered = True
+            else:
+                self.hovered = False
 
     def draw(self):
-        if self.hovered:
+        if not self.active:
+            color = self.inactive_color
+            border_color = None
+        elif self.hovered:
             color = self.hover_color
             border_color = self.border_color
         else:
@@ -54,8 +62,9 @@ class Button:
     def show_text(self):
         if self.text is not None:
             string = str(self.text() if callable(self.text) else self.text)
-            text = self.font.render(
-                string, True, Color.WHITE)
+            text_color = Settings.BUTTON_TEXT_COLOR if self.active else Color.shade_color(
+                Settings.BUTTON_TEXT_COLOR, 0 - Settings.COLOR_SHADE)
+            text = self.font.render(string, True, text_color)
             text_size = text.get_size()
             text_x = self.x + (self.width / 2) - (text_size[0] / 2)
             text_y = self.y + (self.height / 2) - (text_size[1] / 2)

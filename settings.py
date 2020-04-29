@@ -19,6 +19,7 @@ class Settings:
     BUTTON_TEXT_COLOR = Color.WHITE
     LINE_COLOR = Color.BLACK
     GAME_BG_COLOR = Color.DIM_DARK_GRAY
+    COLOR_SHADE = 30
 
     WINDOW_TITLE = "NNNavigator"
 
