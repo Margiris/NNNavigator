@@ -4,7 +4,7 @@ from settings import Settings
 
 
 class GameObject(pygame.sprite.Sprite):
-    def __init__(self, sprite_groups, tile_size, color, coords, size, is_movable=False, fpm=Settings.FRAMES_PER_MOVE):
+    def __init__(self, sprite_groups, tile_size, color, coords, size, is_movable=False, fpm=Settings.FRAMES_PER_MOVE, move_ticks=0):
         self.groups = sprite_groups
         pygame.sprite.Sprite.__init__(self, self.groups)
         self.tile_size = tile_size
@@ -17,7 +17,7 @@ class GameObject(pygame.sprite.Sprite):
 
         self.is_movable = is_movable
         self.frames_per_move = fpm
-        self.move_ticker = 0
+        self.move_ticker = move_ticks
 
     def update(self):
         self.image.fill(self.color)
@@ -30,8 +30,6 @@ class GameObject(pygame.sprite.Sprite):
         pass
 
     def move(self, dx=0, dy=0):
-        if dx > 1:
-            print("moved.", self.move_ticker, self.frames_per_move)
         if self.is_movable and self.move_ticker > self.frames_per_move:
             self.move_ticker = 0
             if 0 <= self.x + dx < Settings.TILE_COUNT[0]:
@@ -39,8 +37,9 @@ class GameObject(pygame.sprite.Sprite):
             if 0 <= self.y + dy < Settings.TILE_COUNT[1]:
                 self.y += dy
 
-    def to_string(self):
-        return str(self.x) + " " + str(self.y) + " " + str(self.color)
+    def __str__(self):
+        return " ".join([tuple__str__(self.color), str(self.x), str(self.y), str(self.width), str(self.height),
+                         str(self.is_movable), str(self.frames_per_move), str(self.move_ticker)])
 
 
 class Goal(GameObject):
@@ -49,8 +48,9 @@ class Goal(GameObject):
 
 
 class Player(GameObject):
-    def __init__(self, sprite_groups, tile_size, color, coords, size=(1, 1), walls=None):
-        super().__init__(sprite_groups, tile_size, color, coords, size, True)
+    def __init__(self, sprite_groups, tile_size, color, coords, size=(1, 1), walls=None, move_ticks=0):
+        super().__init__(sprite_groups, tile_size, color,
+                         coords, size, True, move_ticks=move_ticks)
         self.is_alive = True
         self.walls = walls
         self.original_color = color
@@ -61,7 +61,7 @@ class Player(GameObject):
         return super().update()
 
     def move(self, dx=0, dy=0):
-        if self.is_alive:
+        if self.is_alive and self.move_ticker > self.frames_per_move:
             if self.collides_with_wall(self.x + dx, self.y + dy):
                 self.die()
             else:
@@ -81,11 +81,15 @@ class Player(GameObject):
                 return True
         return False
 
+    def __str__(self):
+        return " ".join(["P", super().__str__(), str(self.is_alive), tuple__str__(self.original_color)])
+
 
 class Wall(GameObject):
     def __init__(self, sprite_groups, tile_size, color, coords, size=(1, 1), is_movable=False,
-                 fpm=Settings.FRAMES_PER_MOVE, movement_range=(0, 0)):
-        super().__init__(sprite_groups, tile_size, color, coords, size, is_movable, fpm)
+                 fpm=Settings.FRAMES_PER_MOVE, movement_range=(0, 0), move_ticks=0):
+        super().__init__(sprite_groups, tile_size, color,
+                         coords, size, is_movable, fpm, move_ticks)
         self.curr_pos, self.max_pos = movement_range
         self.move_dir = 1 if self.max_pos < 0 else -1
 
@@ -104,3 +108,10 @@ class Wall(GameObject):
                 self.move_dir = 0 - self.move_dir
             self.move(0, 0 - self.move_dir)
         self.curr_pos += self.move_dir
+
+    def __str__(self):
+        return " ".join(["W", super().__str__(), str(self.curr_pos), str(self.max_pos), str(self.move_dir)])
+
+
+def tuple__str__(t):
+    return " ".join([str(c) for c in t])

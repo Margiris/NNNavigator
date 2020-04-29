@@ -1,7 +1,8 @@
+from os import getcwd
 import pygame
 from random import randint, random
 from tkinter import Tk
-from tkinter.filedialog import askopenfilename
+from tkinter.filedialog import askopenfilename, asksaveasfile
 from button import ButtonFactory
 from color import Color
 from gameObjects import Player, Wall
@@ -60,6 +61,7 @@ class State:
         elif self == State.PAUSE:
             self.handle_specific_events = self.handle_events_pause
             self.all_sprites = self.previous_state.all_sprites
+            self.player_sprites = self.previous_state.player_sprites
             self.wall_sprites = self.previous_state.wall_sprites
 
             [self.surfaces.append(
@@ -188,7 +190,9 @@ class State:
 
     def load_state(self):
         Tk().withdraw()
-        map_file = askopenfilename()
+        map_file = askopenfilename(title="Open NNNavigator state file",
+                                   initialdir=getcwd() + "/maps",
+                                   filetypes=("NNNavigator state file", "nnn"))
 
         map_data = []
         with open(map_file, 'rt') as f:
@@ -197,7 +201,19 @@ class State:
         self.spawn_from_file(map_data)
 
     def save_state(self):
-        pass
+        Tk().withdraw()
+        f = asksaveasfile(title="Save NNNavigator state",
+                          initialdir=getcwd() + "/maps",
+                          defaultextension=".nnn")
+        if f is None:
+            return
+
+        for player in self.player_sprites:
+            f.write(str(player) + "\n")
+        for wall in self.wall_sprites:
+            f.write(str(wall) + "\n")
+
+        f.close()
 
     MENU = "menu"
     PLAY = "play"
