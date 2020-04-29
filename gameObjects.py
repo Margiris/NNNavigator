@@ -1,5 +1,4 @@
 import pygame
-from color import Color
 from settings import Settings
 
 
@@ -69,7 +68,7 @@ class Player(GameObject):
 
     def die(self):
         self.is_alive = False
-        self.color = Color.BLACK
+        self.color = Settings.PLAYER_DEAD_COLOR
 
     def resurrect(self):
         self.is_alive = True

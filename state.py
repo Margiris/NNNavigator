@@ -4,7 +4,6 @@ from random import randint, random
 from tkinter import Tk
 from tkinter.filedialog import askopenfile, asksaveasfile
 from button import ButtonFactory
-from color import Color
 from gameObjects import Player, Wall
 from surface import Surface, TiledScalableSurface
 from settings import Settings
@@ -26,7 +25,7 @@ class State:
 
             self.surfaces.append(Surface(program.surface_main,
                                          program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
-                                         Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
+                                         Settings.BUTTON_BAR_POS))
 
             self.buttons.append(ButtonFactory.create_button_centered(program.settings, self.surfaces[-1].surface,
                                                                      Settings.GAME_BG_COLOR, "Start",
@@ -39,28 +38,30 @@ class State:
 
             self.surfaces.append(TiledScalableSurface(program.surface_main, Settings.GAME_DIMENSIONS,
                                                       program.settings.GAME_DIMENSIONS_CURRENT, program.settings.GAME_POS,
-                                                      Color.DIM_DARK_GRAY, Settings.LINE_COLOR, Settings.LINE_WIDTH))
-            self.surfaces.append(Surface(program.surface_main,
-                                         program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
-                                         Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
+                                                      Settings.GAME_BG_COLOR, Settings.LINE_COLOR, Settings.LINE_WIDTH))
+            self.surfaces.append(Surface(
+                program.surface_main, program.settings.BUTTON_BAR_DIMENSIONS_CURRENT, Settings.BUTTON_BAR_POS))
 
             for _ in range(0, 10):
                 Player((self.all_sprites, self.player_sprites),
-                       self.surfaces[0].tile_size, Color.PURPLE, (10, 8), walls=self.wall_sprites)
+                       self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (10, 8), walls=self.wall_sprites)
             self.main_player = Player(
-                (self.all_sprites, self.player_sprites), self.surfaces[0].tile_size, Color.YELLOW, (0, 0), walls=self.wall_sprites)
+                (self.all_sprites, self.player_sprites), self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (0, 0), walls=self.wall_sprites)
 
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(5),
-                                                            Color.MEDIUM_BLUE, "Pause",
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
+                                                            Settings.BUTTON_BG_COLOR, "Pause",
                                                             program.change_to_state, State.PAUSE))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(6),
-                                                            Color.INDIGO, "Load", self.load_state))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(1),
+                                                            Settings.BUTTON_BG_COLOR, "Load", self.load_state))
             self.buttons[-1].active = False
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(7),
-                                                            Color.FOREST_GREEN, "Save", self.save_state))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(2),
+                                                            Settings.BUTTON_BG_COLOR, "Save", self.save_state))
             self.buttons[-1].active = False
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(10),
-                                                            Color.NAVY, "Restart", self.restart))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(3),
+                                                            Settings.BUTTON_BG_COLOR, "Restart", self.restart))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(4),
+                                                            Settings.BUTTON_BG_COLOR, program.clock.get_fps, self.restart))
+            self.buttons[-1].active = False
             self.spawn_random_walls()
         elif self == State.PAUSE:
             self.handle_specific_events = self.handle_events_pause
@@ -75,15 +76,15 @@ class State:
                                          program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
                                          Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
 
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(5),
-                                                            Color.MEDIUM_BLUE, "Resume",
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
+                                                            Settings.BUTTON_BG_COLOR, "Resume",
                                                             program.change_to_state, self.previous_state))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(6),
-                                                            Color.INDIGO, "Load", self.load_state))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(7),
-                                                            Color.FOREST_GREEN, "Save", self.save_state))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(10),
-                                                            Color.NAVY, "Restart", self.restart))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(1),
+                                                            Settings.BUTTON_BG_COLOR, "Load", self.load_state))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(2),
+                                                            Settings.BUTTON_BG_COLOR, "Save", self.save_state))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(3),
+                                                            Settings.BUTTON_BG_COLOR, "Restart", self.restart))
             self.buttons[-1].active = False
 
     def update(self):
@@ -177,12 +178,12 @@ class State:
                     space_left = tile_count - random_spot - length
 
                     if random() < Settings.MOVING_WALL_SPAWN_RATE and space_left > min_movement:
-                        color = Color.CORN_FLOWER_BLUE
+                        color = Settings.MOVING_WALL_COLOR
                         movable = True
                         movement_range = (0, randint(
                             min_movement, space_left) if axis == 0 else 0 - randint(min_movement, space_left))
                     else:
-                        color = Color.STEEL_BLUE
+                        color = Settings.WALL_COLOR
                         movable = False
                         movement_range = (0, 0)
 

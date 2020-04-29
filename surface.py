@@ -3,7 +3,7 @@ from settings import Settings
 
 
 class Surface:
-    def __init__(self, parent, size_func, offset, fill_color):
+    def __init__(self, parent, size_func, offset, fill_color=Settings.BACKGROUND_COLOR):
         self.parent = parent
         self.size_func = size_func
         self.pos = offset

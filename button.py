@@ -9,7 +9,8 @@ class Button:
         self.coords = coords
         self.width, self.height = size
         self.bg_color = bg_color
-        self.border_color = Color.random_color()
+        # self.border_color = Settings.BUTTON_BORDER_COLOR
+        self.border_color = None
         self.hover_color = Color.shade_color(
             self.bg_color, Settings.COLOR_SHADE / 2)
         self.inactive_color = Color.shade_color(
@@ -45,25 +46,25 @@ class Button:
     def draw(self):
         if not self.active:
             color = self.inactive_color
-            border_color = None
+            # border_color = None
         elif self.hovered:
             color = self.hover_color
-            border_color = self.border_color
+            # border_color = self.border_color
         else:
             color = self.bg_color
-            border_color = None
+            # border_color = None
 
         pygame.draw.rect(self.surface, color, self.coords_4)
-        if border_color is not None:
-            pygame.draw.rect(self.surface, self.border_color, self.coords_4, 2)
+        # if border_color is not None:
+        #     pygame.draw.rect(self.surface, self.border_color, self.coords_4, 2)
 
         self.show_text()
 
     def show_text(self):
         if self.text is not None:
-            string = str(self.text() if callable(self.text) else self.text)
-            text_color = Settings.BUTTON_TEXT_COLOR if self.active else Color.shade_color(
-                Settings.BUTTON_TEXT_COLOR, 0 - Settings.COLOR_SHADE)
+            string = '{:.2f}'.format(self.text()) if callable(
+                self.text) else self.text
+            text_color = Settings.BUTTON_TEXT_COLOR if self.active else Settings.BUTTON_TEXT_INACTIVE_COLOR
             text = self.font.render(string, True, text_color)
             text_size = text.get_size()
             text_x = self.x + (self.width / 2) - (text_size[0] / 2)
