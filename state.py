@@ -2,7 +2,7 @@ from os import getcwd
 import pygame
 from random import randint, random
 from tkinter import Tk
-from tkinter.filedialog import askopenfilename, asksaveasfile
+from tkinter.filedialog import askopenfile, asksaveasfile
 from button import ButtonFactory
 from color import Color
 from gameObjects import Player, Wall
@@ -50,14 +50,13 @@ class State:
             self.main_player = Player(
                 (self.all_sprites, self.player_sprites), self.surfaces[0].tile_size, Color.YELLOW, (0, 0), walls=self.wall_sprites)
 
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(10),
                                                             Color.MEDIUM_BLUE, "Pause",
                                                             program.change_to_state, State.PAUSE))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(5),
                                                             Color.NAVY, "Restart",
                                                             self.restart))
             self.spawn_random_walls()
-
         elif self == State.PAUSE:
             self.handle_specific_events = self.handle_events_pause
             self.all_sprites = self.previous_state.all_sprites
@@ -71,7 +70,7 @@ class State:
                                          program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
                                          Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
 
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(10),
                                                             Color.MEDIUM_BLUE, "Resume",
                                                             program.change_to_state, self.previous_state))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(8),
@@ -185,20 +184,39 @@ class State:
                         Wall((self.all_sprites, self.wall_sprites), self.surfaces[0].tile_size, color, (i, line) if axis == 0 else (
                             line, i), is_movable=movable, fpm=speed, movement_range=movement_range)
 
-    def spawn_from_file(self, map_data):
-        pass
+    def spawn_from_line(self, obj_data):
+        props = obj_data.split(Settings.PROP_SEP)
+        color = tuple(int(c) for c in props[1].split(','))
+        if props[0] == "P":
+            self.previous_state.main_player = Player((self.all_sprites, self.player_sprites), self.surfaces[0].tile_size, color, (int(props[2]), int(
+                props[3])), (int(props[4]), int(props[5])), walls=self.wall_sprites, fpm=int(props[7]), move_ticks=int(props[8]))
+            if props[9] != "True":
+                self.main_player.die()
+        elif props[0] == "W":
+            Wall((self.all_sprites, self.wall_sprites), self.surfaces[0].tile_size, color, (int(props[2]), int(
+                props[3])), (int(props[4]), int(props[5])), is_movable=props[6] == "True", fpm=int(props[7]), move_ticks=int(props[8]), movement_range=(int(props[9]), int(props[10])), move_dir=int(props[11]))
 
     def load_state(self):
         Tk().withdraw()
-        map_file = askopenfilename(title="Open NNNavigator state file",
-                                   initialdir=getcwd() + "/maps",
-                                   filetypes=("NNNavigator state file", "nnn"))
+        f = askopenfile(title="Open NNNavigator state file",
+                        initialdir=getcwd() + "/maps",
+                        filetypes=[("NNNavigator state file", ".nnn")])
+        if f is None:
+            return
 
-        map_data = []
-        with open(map_file, 'rt') as f:
-            map_data = f.readlines()
+        for player in self.player_sprites:
+            self.all_sprites.remove(player)
+            self.player_sprites.remove(player)
+        for wall in self.wall_sprites:
+            self.all_sprites.remove(wall)
+            self.wall_sprites.remove(wall)
 
-        self.spawn_from_file(map_data)
+        for line in f:
+            self.spawn_from_line(line)
+
+        f.close()
+
+        self.all_sprites.update()
 
     def save_state(self):
         Tk().withdraw()
@@ -209,9 +227,9 @@ class State:
             return
 
         for player in self.player_sprites:
-            f.write(str(player) + "\n")
+            f.write(str(player) + Settings.PROP_SEP + "\n")
         for wall in self.wall_sprites:
-            f.write(str(wall) + "\n")
+            f.write(str(wall) + Settings.PROP_SEP + "\n")
 
         f.close()
 
