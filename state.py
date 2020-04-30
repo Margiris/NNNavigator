@@ -48,20 +48,19 @@ class State:
             self.main_player = Player(
                 (self.all_sprites, self.player_sprites), self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (0, 0), walls=self.wall_sprites)
 
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-4),
                                                             Settings.BUTTON_BG_COLOR, "Pause",
                                                             program.change_to_state, State.PAUSE))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(1),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
                                                             Settings.BUTTON_BG_COLOR, "Load", self.load_state))
             self.buttons[-1].active = False
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(2),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(1),
                                                             Settings.BUTTON_BG_COLOR, "Save", self.save_state))
             self.buttons[-1].active = False
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(3),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-3),
                                                             Settings.BUTTON_BG_COLOR, "Restart", self.restart))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(4),
-                                                            Settings.BUTTON_BG_COLOR, program.clock.get_fps, self.restart))
-            self.buttons[-1].active = False
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-1),
+                                                            Settings.BUTTON_BG_COLOR, program.clock.get_fps, program.limit_fps))
             self.spawn_random_walls()
         elif self == State.PAUSE:
             self.handle_specific_events = self.handle_events_pause
@@ -76,15 +75,18 @@ class State:
                                          program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
                                          Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
 
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-4),
                                                             Settings.BUTTON_BG_COLOR, "Resume",
                                                             program.change_to_state, self.previous_state))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(1),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
                                                             Settings.BUTTON_BG_COLOR, "Load", self.load_state))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(2),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(1),
                                                             Settings.BUTTON_BG_COLOR, "Save", self.save_state))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(3),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-3),
                                                             Settings.BUTTON_BG_COLOR, "Restart", self.restart))
+            self.buttons[-1].active = False
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-1),
+                                                            Settings.BUTTON_BG_COLOR, program.clock.get_fps, program.limit_fps))
             self.buttons[-1].active = False
 
     def update(self):

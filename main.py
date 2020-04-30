@@ -75,6 +75,12 @@ class Program:
         # self.surface_main.fill(self.settings.BACKGROUND_COLOR)
         self.draw()
 
+    def limit_fps(self):
+        if self.settings.MAX_FPS > 60:
+            self.settings.MAX_FPS = 60
+        else:
+            self.settings.MAX_FPS *= 10
+
 
 if __name__ == "__main__":
     NNNavigator = Program()

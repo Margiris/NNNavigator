@@ -7,7 +7,7 @@ class Settings:
     PROP_SEP = ';'
 
     MIN_FPS = 10
-    MAX_FPS = 600
+    MAX_FPS = 60
     FRAMES_PER_MOVE = 5
 
     WALL_SPAWN_RATE = 0.2
@@ -51,8 +51,12 @@ class Settings:
 
     @staticmethod
     def BUTTON_POS(i):
-        return (Settings.MARGINS[0] * (i + 1) + Settings.BUTTON_SIZE[0] * i,
-                Settings.MARGINS[1])
+        if i < 0:
+            return (Settings.WINDOW_SIZE[0] - Settings.MARGINS[0] * (0 - i) - Settings.BUTTON_SIZE[0] * (0 - i),
+                    Settings.MARGINS[1])
+        else:
+            return (Settings.MARGINS[0] * (i + 1) + Settings.BUTTON_SIZE[0] * i,
+                    Settings.MARGINS[1])
 
     BUTTON_BAR_DIMENSIONS = (
         WINDOW_SIZE[0], MARGINS[1] * 2 + BUTTON_SIZE[1])
