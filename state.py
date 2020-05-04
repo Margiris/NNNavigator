@@ -50,10 +50,10 @@ class State:
                 (self.all_sprites), self.surfaces[0].tile_size, Settings.GOAL_COLOR, (0, 0))
 
             self.main_player = Player((self.all_sprites, self.player_sprites), self.acknowledge_death,
-                                      self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (0, 0), goal=self.goal, walls=self.wall_sprites)
+                                      self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (0, 0), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0])
             for _ in range(0, 10):
                 Player((self.all_sprites, self.player_sprites), self.acknowledge_death,
-                       self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (10, 8), goal=self.goal, walls=self.wall_sprites)
+                       self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (10, 8), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0])
 
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-5),
                                                             Settings.BUTTON_BG_COLOR, "Pause",
@@ -122,6 +122,8 @@ class State:
             self.all_sprites.draw(self.surfaces[0].surface)
         if self.player_sprites:
             self.player_sprites.draw(self.surfaces[0].surface)
+            [player.brain.draw()
+             for player in self.player_sprites if player.is_alive]
         for surface in self.surfaces:
             surface.blit()
 
@@ -220,7 +222,7 @@ class State:
         color = tuple(int(c) for c in props[1].split(','))
         if props[0] == "P":
             self.previous_state.main_player = Player((self.previous_state.all_sprites, self.previous_state.player_sprites), self.previous_state.acknowledge_death, self.previous_state.surfaces[0].tile_size, color, (int(props[2]), int(
-                props[3])), (int(props[4]), int(props[5])), goal=self.goal, walls=self.previous_state.wall_sprites, fpm=int(props[7]), move_ticks=int(props[8]), reached_goal=props[10] == "True")
+                props[3])), (int(props[4]), int(props[5])), goal=self.goal, walls=self.previous_state.wall_sprites, fpm=int(props[7]), move_ticks=int(props[8]), reached_goal=props[10] == "True", vision_surface=self.previous_state.surfaces[0])
             self.previous_state.alive_count += 1
             if props[9] != "True":
                 self.previous_state.main_player.die()
