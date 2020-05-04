@@ -26,6 +26,8 @@ class Settings:
         BUTTON_TEXT_COLOR, 0 - COLOR_SHADE)
     # BUTTON_BORDER_COLOR = Color.FOREST_GREEN_CRAYOLA
 
+    GOAL_COLOR = Color.WHITE
+
     PLAYER_COLOR = Color.TURQUOISE_BLUE
     PLAYER_DEAD_COLOR = Color.shade_color(PLAYER_COLOR, 0 - COLOR_SHADE)
 
@@ -67,7 +69,7 @@ class Settings:
     BUTTON_BAR_POS = (0, 0)
     GAME_POS = (0, BUTTON_BAR_DIMENSIONS[1] + 0)
 
-    TILE_COUNT = (64, 48)
+    TILE_COUNT = (128, 96)
     # TILE_SIZE = ()
     # TILE_COUNT = (8, 6)
 

@@ -1,4 +1,5 @@
 import pygame
+from brain import Brain
 from settings import Settings
 
 
@@ -45,16 +46,23 @@ class Goal(GameObject):
     def __init__(self, sprite_groups, tile_size, color, coords, size=(1, 1)):
         super().__init__(sprite_groups, tile_size, color, coords, size)
 
+    def __str__(self):
+        return Settings.PROP_SEP.join(["G", tuple__str__(self.color), super().__str__()])
+
 
 class Player(GameObject):
-    def __init__(self, sprite_groups, tile_size, color, coords, size=(1, 1), walls=None, fpm=Settings.FRAMES_PER_MOVE, move_ticks=0):
+    def __init__(self, sprite_groups, function, tile_size, color, coords, size=(1, 1), goal=None, walls=None, fpm=Settings.FRAMES_PER_MOVE, move_ticks=0, reached_goal=False):
         super().__init__(sprite_groups, tile_size, color,
                          coords, size, True, fpm=fpm, move_ticks=move_ticks)
-        self.is_alive = True
+        self.report_death = function
+        self.goal = goal
         self.walls = walls
         self.original_color = color
+        self.brain = Brain(self, reached_goal)
+        self.resurrect()
 
     def update(self):
+        self.brain.update()
         if self.collides_with_wall(self.x, self.y):
             self.die()
         return super().update()
@@ -63,16 +71,21 @@ class Player(GameObject):
         if self.is_alive and self.move_ticker > self.frames_per_move:
             if self.collides_with_wall(self.x + dx, self.y + dy):
                 self.die()
+            elif self.x + dx == self.goal.x and self.y + dy == self.goal.y:
+                self.reached_goal = True
+                self.die()
             else:
                 super().move(dx, dy)
 
     def die(self):
         self.is_alive = False
         self.color = Settings.PLAYER_DEAD_COLOR
+        self.report_death(self)
 
     def resurrect(self):
         self.is_alive = True
         self.color = self.original_color
+        self.brain.resurrect()
 
     def collides_with_wall(self, x, y):
         for wall in self.walls:
@@ -81,7 +94,7 @@ class Player(GameObject):
         return False
 
     def __str__(self):
-        return Settings.PROP_SEP.join(["P", tuple__str__(self.original_color), super().__str__(), str(self.is_alive)])
+        return Settings.PROP_SEP.join(["P", tuple__str__(self.original_color), super().__str__(), str(self.is_alive), str(self.brain)])
 
 
 class Wall(GameObject):
