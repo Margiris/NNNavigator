@@ -36,12 +36,12 @@ class TiledScalableSurface(Surface):
         self.tile_size = (int(round(self.original_size[0] / Settings.TILE_COUNT[0])),
                           int(round(self.original_size[1] / Settings.TILE_COUNT[1])))
 
-        self.font = pygame.font.SysFont('Roboto', 10, bold=True)
+        self.font = pygame.font.SysFont('Roboto', 8, bold=True)
 
     def draw(self):
         self.surface.fill(self.fill_color)
         self.draw_grid()
-        self.draw_border()
+        # self.draw_border()
 
     # Draw a border on surface
     def draw_border(self):
@@ -54,16 +54,19 @@ class TiledScalableSurface(Surface):
             pygame.draw.line(self.surface, self.line_color,
                              (x, 0), (x, self.original_size[1]),
                              self.line_width)
-            self.show_text(x=x, text=str(int(round(x / self.tile_size[0]))))
+            self.show_text(x=x, text=str(
+                int(round(x / self.tile_size[0] % 10))))
 
         for y in range(0, self.original_size[1], self.tile_size[1]):
             pygame.draw.line(self.surface, self.line_color,
                              (0, y), (self.original_size[0], y),
                              self.line_width)
-            self.show_text(y=y, text=str(int(round(y / self.tile_size[1]))))
+            self.show_text(y=y, text=str(
+                int(round(y / self.tile_size[1] % 10))))
 
     def show_text(self, x=0, y=0, text=""):
-        text = self.font.render(text, True, self.line_color)
+        # text = self.font.render(text, True, self.line_color)
+        text = self.font.render(text, True, (255, 255, 255))
         text_size = text.get_size()
         text_x = x + self.tile_size[0] / 2 - (text_size[0] / 2)
         text_y = y + self.tile_size[0] / 2 - (text_size[1] / 2)
