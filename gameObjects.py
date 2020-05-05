@@ -42,22 +42,6 @@ class GameObject(pygame.sprite.Sprite):
                                        str(self.is_movable), str(self.frames_per_move), str(self.move_ticker)])
 
 
-# class VisionCell(GameObject):
-#     def __init__(self, sprite_groups, tile_size, color, coords):
-#         self.obstructed = False
-#         super().__init__(sprite_groups, tile_size, color, coords, (1, 1))
-
-#     def update(self):
-#         return super().update()
-
-#     def draw(self):
-#         return super().draw()
-
-#     def move(self, dx=0, dy=0):
-#         self.x += dx
-#         self.y += dy
-
-
 class Goal(GameObject):
     def __init__(self, sprite_groups, tile_size, color, coords, size=(1, 1)):
         super().__init__(sprite_groups, tile_size, color, coords, size)

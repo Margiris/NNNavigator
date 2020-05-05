@@ -200,6 +200,17 @@ class State:
         self.alive_count = len(self.player_sprites)
 
     def spawn_random_walls(self):
+        for i in range(0, Settings.TILE_COUNT[0]):
+            Wall((self.all_sprites, self.wall_sprites),
+                 self.surfaces[0].tile_size, Settings.WALL_COLOR, (i, 0))
+            Wall((self.all_sprites, self.wall_sprites),
+                 self.surfaces[0].tile_size, Settings.WALL_COLOR, (i, Settings.TILE_COUNT[1] - 1))
+        for i in range(1, Settings.TILE_COUNT[1] - 1):
+            Wall((self.all_sprites, self.wall_sprites),
+                 self.surfaces[0].tile_size, Settings.WALL_COLOR, (0, i))
+            Wall((self.all_sprites, self.wall_sprites),
+                 self.surfaces[0].tile_size, Settings.WALL_COLOR, (Settings.TILE_COUNT[0] - 1, i))
+
         min_movement = 2
         min_length = 3
         for times in range(0, 4):
