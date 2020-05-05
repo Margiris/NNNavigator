@@ -6,6 +6,7 @@ class Settings:
     TUPLE_SEP = ','
     PROP_SEP = ';'
 
+    DRAW_GAME = True
     MIN_FPS = 10
     MAX_FPS = 60
     FRAMES_PER_MOVE = 5

@@ -11,6 +11,7 @@ from settings import Settings
 
 class State:
     def __init__(self, name, program):
+        self.draw_game = program.settings.DRAW_GAME
         self.alive_count = 0
         self.name = name
         self.previous_state = program.state
@@ -51,9 +52,9 @@ class State:
 
             self.main_player = Player((self.all_sprites, self.player_sprites), self.acknowledge_death,
                                       self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (0, 0), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0])
-            for _ in range(0, 10):
-                Player((self.all_sprites, self.player_sprites), self.acknowledge_death,
-                       self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (10, 8), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0])
+            # for _ in range(0, 10):
+            #     Player((self.all_sprites, self.player_sprites), self.acknowledge_death,
+            #            self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (10, 8), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0])
 
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-5),
                                                             Settings.BUTTON_BG_COLOR, "Pause",
@@ -114,18 +115,24 @@ class State:
                 self.restart()
 
     def draw(self):
-        for surface in self.surfaces:
-            surface.draw()
-        for button in self.buttons:
-            button.draw()
-        if self.all_sprites:
-            self.all_sprites.draw(self.surfaces[0].surface)
-        if self.player_sprites:
-            self.player_sprites.draw(self.surfaces[0].surface)
-            [player.brain.draw()
-             for player in self.player_sprites if player.is_alive]
-        for surface in self.surfaces:
-            surface.blit()
+        if self.draw_game:
+            for surface in self.surfaces:
+                surface.draw()
+            for button in self.buttons:
+                button.draw()
+            if self.all_sprites:
+                self.all_sprites.draw(self.surfaces[0].surface)
+            if self.player_sprites:
+                self.player_sprites.draw(self.surfaces[0].surface)
+                [player.brain.draw()
+                 for player in self.player_sprites if player.is_alive]
+            for surface in self.surfaces:
+                surface.blit()
+        else:
+            self.surfaces[1].draw()
+            for button in self.buttons:
+                button.draw()
+            self.surfaces[1].blit()
 
     def __eq__(self, value):
         return self.name == value
@@ -138,6 +145,10 @@ class State:
                 for button in self.buttons:
                     if button.hovered:
                         button.click()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_d:
+                    self.draw_game = not self.draw_game
+                    self.surfaces[0].draw()
 
     def handle_events_menu(self, program, events):
         pass

@@ -55,7 +55,6 @@ class Program:
                 self.resize(event.dict['size'])
                 self.resize(event.dict['size'])
             # elif event.type == pygame.KEYDOWN:
-            #     pass
 
     def update(self):
         self.state.update()
