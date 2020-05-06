@@ -1,9 +1,16 @@
 import numpy
+from pygame import Surface
+import random
+from time import time
+
+from collections import deque
+from keras.callbacks import Callback
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Conv2D, MaxPooling2D, Activation, Flatten
+from keras.optimizers import Adam
+import tensorflow as tf
+
 from settings import Settings
-from pygame import sprite, Rect, Surface, sprite
-from random import randint
-import sys
-print(sys.executable)
 
 
 class VisionSurface:
@@ -28,7 +35,48 @@ class VisionSurface:
 
 
 class Brain:
+    # Agent class
+
+    DISCOUNT = 0.99
+    REPLAY_MEMORY_SIZE = 50_000  # How many last steps to keep for model training
+    # Minimum number of steps in a memory to start training
+    MIN_REPLAY_MEMORY_SIZE = 1_000
+    MINIBATCH_SIZE = 64  # How many steps (samples) to use for training
+    UPDATE_TARGET_EVERY = 5  # Terminal states (end of episodes)
+    MODEL_NAME = 'NNNavigator'
+    MIN_REWARD = -200  # For model save
+    MEMORY_FRACTION = 0.20
+
+    # Environment settings
+    EPISODES = 20_000
+    STEPS_PER_EPISODE = 1000
+
+    # Exploration settings
+    epsilon = 1  # not a constant, going to be decayed
+    EPSILON_DECAY = 0.99975
+    MIN_EPSILON = 0.001
+
+    MOVE_PENALTY = 1
+    DEATH_PENALTY = 300
+    GOAL_REWARD = 25
+    OBSERVATION_SPACE_VALUES = (Settings.VISION_DISTANCE * 2 + 1,
+                                Settings.VISION_DISTANCE * 2 + 1, 1)
+    ACTION_SPACE_SIZE = 5
+
+    AGGREGATE_STATS_EVERY = 50  # episodes
+
+    action_space = {
+        0: (0, 0),
+        1: (0, -1),
+        2: (1, 0),
+        3: (0, 1),
+        4: (-1, 0),
+    }
+
     def __init__(self, player, surface, reached_goal):
+        self.ep_rewards = [self.MIN_REWARD]
+        self.episode = 1
+        self.episode_step = 0
         self.player = player
         self.surface = surface
         self.reached_goal = reached_goal
@@ -38,14 +86,52 @@ class Brain:
         self.visionSprite = VisionSurface(
             surface.tile_size, player.color, coords, surface.surface)
 
+        # Main model
+        self.model = self.create_model()
+
+        # Target network
+        self.target_model = self.create_model()
+        self.target_model.set_weights(self.model.get_weights())
+
+        # An array with last n steps for training
+        self.replay_memory = deque(maxlen=self.REPLAY_MEMORY_SIZE)
+
+        # Custom tensorboard object
+        self.tensorboard = TensorBoard(
+            log_dir="logs/{}-{}".format('NNNavigator', int(time())))
+
+        # Used to count when to update target network with main network's weights
+        self.target_update_counter = 0
+
     def update(self):
-        random_x = randint(-1, 1)
-        random_y = randint(-1, 1)
-        self.look_square()
-        # self.look_8_ways()
-        # self.player.move(random_x, random_y)
-        # print("------------------")
-        # print(self.look_square())
+        if self.player.move_ticker > self.player.frames_per_move:
+            # random_x = random.randint(-1, 1)
+            # random_y = random.randint(-1, 1)
+            # self.player.move(random_x, random_y)
+
+            # This part stays mostly the same, the change is to query a model for Q values
+            if numpy.random.random() > self.epsilon:
+                # Get action from Q table
+                action = numpy.argmax(self.get_qs())
+            else:
+                # Get random action
+                action = numpy.random.randint(0, self.ACTION_SPACE_SIZE)
+
+            new_state, reward, done = self.do_step(action)
+
+            # Transform new continous state to new discrete state and count reward
+            self.episode_reward += reward
+
+            # Every step we update replay memory and train main network
+            self.update_replay_memory(
+                (self.current_state, action, reward, new_state, done))
+            self.train(done, self.step)
+
+            self.current_state = new_state
+            self.step += 1
+
+            if self.episode_step >= self.STEPS_PER_EPISODE:
+                self.player.die()
 
     def move(self, dx=0, dy=0):
         self.visionSprite.move(dx, dy)
@@ -53,52 +139,168 @@ class Brain:
     def draw(self):
         self.visionSprite.draw()
 
-    def look_8_ways(self):
-        vision_cells = []
-        vision = [None for _ in range(8)]
-        index = 0
-        for y in range(-1, 2):
-            for x in range(-1, 2):
-                if x == 0 and y == 0:
-                    continue
-                vision[index] = 0
-                for i in range(1, Settings.VISION_DISTANCE + 1):
-                    if self.player.collides_with_wall(self.player.x + x * i, self.player.y + y * i):
-                        vision[index] = Settings.VISION_DISTANCE - i + 1
-                        break
-                    else:
-                        vision_cells.append((self.player.x + x * i,
-                                             self.player.y + y * i))
-                index += 1
-        return vision, vision_cells
+    def do_step(self, action_index):
+        self.episode_step += 1
+        self.player.move(*self.action_space[action_index])
 
-    def look_square(self):
-        vision = numpy.ones((Settings.VISION_DISTANCE * 2 + 1,
-                             Settings.VISION_DISTANCE * 2 + 1), dtype=numpy.uint8)
-        x_start = self.player.x - Settings.VISION_DISTANCE
-        x_end = self.player.x + Settings.VISION_DISTANCE
-        y_start = self.player.y - Settings.VISION_DISTANCE
-        y_end = self.player.y + Settings.VISION_DISTANCE
+        if self.player.is_alive:
+            reward = -self.MOVE_PENALTY
+        elif self.reached_goal:
+            reward = self.GOAL_REWARD
+        else:
+            reward = -self.DEATH_PENALTY
 
-        for wall in self.player.walls:
-            if x_start <= wall.x <= x_end and y_start <= wall.y <= y_end:
-                vision[wall.y - self.player.y + Settings.VISION_DISTANCE][wall.x -
-                                                                          self.player.x + Settings.VISION_DISTANCE] = 0
-        if x_start < self.player.goal.x < x_end and y_start < self.player.goal.y < y_end:
-            vision[self.player.goal.y - self.player.y + Settings.VISION_DISTANCE][self.player.goal.x -
-                                                                                  self.player.x + Settings.VISION_DISTANCE] = 2
-
-        return vision
+        return self.player.look_square(), reward, not self.player.is_alive
 
     def die(self):
-        # self.unobstructed_vision_cells.remove(
-        #     [cell for cell in self.unobstructed_vision_cells])
-        pass
+        self.ep_rewards.append(self.episode_reward)
+        if not self.episode % self.AGGREGATE_STATS_EVERY or self.episode == 1:
+            average_reward = sum(
+                self.ep_rewards[-self.AGGREGATE_STATS_EVERY:])/len(self.ep_rewards[-self.AGGREGATE_STATS_EVERY:])
+            min_reward = min(self.ep_rewards[-self.AGGREGATE_STATS_EVERY:])
+            max_reward = max(self.ep_rewards[-self.AGGREGATE_STATS_EVERY:])
+            self.tensorboard.update_stats(
+                reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=self.epsilon)
+
+            # Save model, but only when min reward is greater or equal a set value
+            if min_reward >= self.MIN_REWARD:
+                self.model.save(
+                    f'models/{self.MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time())}.model')
+
+        # Decay epsilon
+        if self.epsilon > self.MIN_EPSILON:
+            self.epsilon *= self.EPSILON_DECAY
+            self.epsilon = max(self.MIN_EPSILON, self.epsilon)
+
+        self.episode += 1
 
     def resurrect(self):
-        # self.unobstructed_vision_cells.add(
-        #     [cell for cell in self.vision_cells])
-        pass
+        # Update tensorboard step every episode
+        self.tensorboard.step = self.episode
+
+        # Restarting episode - reset episode reward and step number
+        self.episode_reward = 0
+        self.episode_step = 0
+        self.current_state = self.player.look_square()
+        self.step = 1
+        self.current_state = self.player.look_square()
 
     def __str__(self):
         return Settings.TUPLE_SEP.join([str(self.reached_goal)])
+
+    def create_model(self):
+        model = Sequential()
+
+        # OBSERVATION_SPACE_VALUES = (10, 10, 3) a 10x10 RGB image.
+        model.add(Conv2D(256, (3, 3), input_shape=self.OBSERVATION_SPACE_VALUES))
+        model.add(Activation('relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.2))
+
+        model.add(Conv2D(256, (3, 3)))
+        model.add(Activation('relu'))
+        model.add(MaxPooling2D(pool_size=(2, 2)))
+        model.add(Dropout(0.2))
+
+        # this converts our 3D feature maps to 1D feature vectors
+        model.add(Flatten())
+        model.add(Dense(64))
+
+        # ACTION_SPACE_SIZE = how many choices (9)
+        model.add(Dense(self.ACTION_SPACE_SIZE, activation='linear'))
+        model.compile(loss="mse", optimizer=Adam(
+            lr=0.001), metrics=['accuracy'])
+        return model
+
+    # Adds step's data to a memory replay array
+    # (observation space, action, reward, new observation space, done)
+    def update_replay_memory(self, transition):
+        self.replay_memory.append(transition)
+
+    # Trains main network every step during episode
+    def train(self, terminal_state, step):
+
+        # Start training only if certain number of samples is already saved
+        if len(self.replay_memory) < self.MIN_REPLAY_MEMORY_SIZE:
+            print(len(self.replay_memory))
+            return
+
+        # Get a minibatch of random samples from memory replay table
+        minibatch = random.sample(self.replay_memory, self.MINIBATCH_SIZE)
+
+        # Get current states from minibatch, then query NN model for Q values
+        current_states = numpy.array([transition[0]
+                                      for transition in minibatch])
+        current_qs_list = self.model.predict(current_states)
+
+        # Get future states from minibatch, then query NN model for Q values
+        # When using target network, query it, otherwise main network should be queried
+        new_current_states = numpy.array(
+            [transition[3] for transition in minibatch])
+        future_qs_list = self.target_model.predict(new_current_states)
+
+        X = []
+        y = []
+
+        # Now we need to enumerate our batches
+        for index, (current_state, action, reward, new_current_state, done) in enumerate(minibatch):
+
+            # If not a terminal state, get new q from future states, otherwise set it to 0
+            # almost like with Q Learning, but we use just part of equation here
+            if not done:
+                max_future_q = numpy.max(future_qs_list[index])
+                new_q = reward + self.DISCOUNT * max_future_q
+            else:
+                new_q = reward
+
+            # Update Q value for given state
+            current_qs = current_qs_list[index]
+            current_qs[action] = new_q
+
+            # And append to our training data
+            X.append(current_state)
+            y.append(current_qs)
+
+        # Fit on all samples as one batch, log only on terminal state
+        self.model.fit(numpy.array(X), numpy.array(y), batch_size=self.MINIBATCH_SIZE, verbose=0,
+                       shuffle=False, callbacks=[self.tensorboard] if terminal_state else None)
+
+        # Update target network counter every episode
+        if terminal_state:
+            self.target_update_counter += 1
+
+        # If counter reaches set value, update target network with weights of main network
+        if self.target_update_counter > self.UPDATE_TARGET_EVERY:
+            self.target_model.set_weights(self.model.get_weights())
+            self.target_update_counter = 0
+
+    # Queries main network for Q values given current observation space (environment state)
+    def get_qs(self):
+        return self.model.predict(numpy.array(self.current_state).reshape(-1, *self.current_state.shape))[0]
+
+
+# Own Tensorboard class
+class TensorBoard(Callback):
+
+    # Set initial step and writer (we want one log file for all .fit() calls)
+    def __init__(self, log_dir):
+        self.step = 1
+        self.log_dir = log_dir
+        self.writer = tf.summary.create_file_writer(self.log_dir)
+
+    # Saves logs with our step number (otherwise every .fit() will start writing from 0th step)
+    def on_epoch_end(self, epoch, logs=None):
+        self.update_stats(**logs)
+
+    # Custom method for saving own (and also internal) metrics (can be called externally)
+    def update_stats(self, **stats):
+        self._write_logs(stats, self.step)
+
+    # More or less the same writer as in Keras' Tensorboard callback
+    # Physically writes to the log files
+    def _write_logs(self, logs, index):
+        for name, value in logs.items():
+            if name in ['batch', 'size']:
+                continue
+            with self.writer.as_default():
+                tf.summary.scalar(name, value, step=index)

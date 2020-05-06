@@ -1,4 +1,5 @@
 import pygame
+import numpy
 from brain import Brain
 from settings import Settings
 
@@ -94,6 +95,43 @@ class Player(GameObject):
             if wall.x == x and wall.y == y:
                 return True
         return False
+
+    # def look_8_ways(self):
+    #     vision_cells = []
+    #     vision = [None for _ in range(8)]
+    #     index = 0
+    #     for y in range(-1, 2):
+    #         for x in range(-1, 2):
+    #             if x == 0 and y == 0:
+    #                 continue
+    #             vision[index] = 0
+    #             for i in range(1, Settings.VISION_DISTANCE + 1):
+    #                 if self.collides_with_wall(self.x + x * i, self.y + y * i):
+    #                     vision[index] = Settings.VISION_DISTANCE - i + 1
+    #                     break
+    #                 else:
+    #                     vision_cells.append((self.x + x * i,
+    #                                          self.y + y * i))
+    #             index += 1
+    #     return vision, vision_cells
+
+    def look_square(self):
+        vision = numpy.zeros(
+            self.brain.OBSERVATION_SPACE_VALUES, dtype=numpy.uint8)
+        x_start = self.x - Settings.VISION_DISTANCE
+        x_end = self.x + Settings.VISION_DISTANCE
+        y_start = self.y - Settings.VISION_DISTANCE
+        y_end = self.y + Settings.VISION_DISTANCE
+
+        for wall in self.walls:
+            if x_start <= wall.x <= x_end and y_start <= wall.y <= y_end:
+                vision[wall.y - self.y + Settings.VISION_DISTANCE][wall.x -
+                                                                   self.x + Settings.VISION_DISTANCE] = -1
+        if x_start < self.goal.x < x_end and y_start < self.goal.y < y_end:
+            vision[self.goal.y - self.y + Settings.VISION_DISTANCE][self.goal.x -
+                                                                    self.x + Settings.VISION_DISTANCE] = 1
+
+        return vision
 
     def __str__(self):
         return Settings.PROP_SEP.join(["P", tuple__str__(self.original_color), super().__str__(), str(self.is_alive), str(self.brain)])
