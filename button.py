@@ -21,7 +21,7 @@ class Button:
         self.function = function
         self.args = args
         self.font = pygame.font.SysFont(
-            'Courier', Settings.BUTTON_TEXT_SIZE, bold=True)
+            'Arial', Settings.BUTTON_TEXT_SIZE, bold=True)
 
     @property
     def x(self):
