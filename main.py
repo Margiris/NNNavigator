@@ -76,10 +76,10 @@ class Program:
         self.draw()
 
     def limit_fps(self):
-        if self.settings.MAX_FPS > 60:
-            self.settings.MAX_FPS = 60
+        if self.settings.MAX_FPS > Settings.MAX_FPS:
+            self.settings.MAX_FPS = Settings.MAX_FPS
         else:
-            self.settings.MAX_FPS *= 10
+            self.settings.MAX_FPS *= 100
 
 
 if __name__ == "__main__":
