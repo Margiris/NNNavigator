@@ -56,8 +56,8 @@ class State:
             #     Player((self.all_sprites, self.player_sprites), self.acknowledge_death,
             #            self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (10, 8), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0])
 
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-5),
-                                                            Settings.BUTTON_BG_COLOR, "Pause",
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(3),
+                                                            Settings.BUTTON_BG_COLOR, "(P)ause",
                                                             program.change_to_state, State.PAUSE))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
                                                             Settings.BUTTON_BG_COLOR, "Save", self.save_state))
@@ -65,8 +65,10 @@ class State:
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(1),
                                                             Settings.BUTTON_BG_COLOR, "Load", self.load_state))
             self.buttons[-1].active = False
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-4),
-                                                            Settings.BUTTON_BG_COLOR, "Restart", self.restart))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(5),
+                                                            Settings.BUTTON_BG_COLOR, "Rese(t)", self.reset))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(4),
+                                                            Settings.BUTTON_BG_COLOR, "(R)estart", self.restart))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-2),
                                                             Settings.BUTTON_BG_COLOR, self.get_alive_count, None))
             self.buttons[-1].active = False
@@ -86,15 +88,18 @@ class State:
                                          program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
                                          Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
 
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-5),
-                                                            Settings.BUTTON_BG_COLOR, "Resume",
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(3),
+                                                            Settings.BUTTON_BG_COLOR, "Un(p)ause",
                                                             program.change_to_state, self.previous_state))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
                                                             Settings.BUTTON_BG_COLOR, "Save", self.save_state))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(1),
                                                             Settings.BUTTON_BG_COLOR, "Load", self.load_state))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-4),
-                                                            Settings.BUTTON_BG_COLOR, "Restart", self.restart))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(5),
+                                                            Settings.BUTTON_BG_COLOR, "Rese(t)", self.reset))
+            self.buttons[-1].active = False
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(4),
+                                                            Settings.BUTTON_BG_COLOR, "(R)estart", self.restart))
             self.buttons[-1].active = False
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-2),
                                                             Settings.BUTTON_BG_COLOR, self.previous_state.get_alive_count, None))
@@ -112,7 +117,7 @@ class State:
             if self.all_sprites:
                 self.all_sprites.update()
             if self.alive_count <= 0:
-                self.restart()
+                self.reset()
 
     def draw(self):
         if self.draw_game:
@@ -158,7 +163,9 @@ class State:
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_r:
                     self.restart()
-                if event.key == pygame.K_p or event.key == pygame.K_SPACE:
+                elif event.key == pygame.K_t:
+                    self.reset()
+                elif event.key == pygame.K_p or event.key == pygame.K_SPACE:
                     program.change_to_state(State.PAUSE)
                     break
         move_x, move_y = 0, 0
@@ -181,23 +188,30 @@ class State:
                     program.change_to_state(self.previous_state)
                     break
 
+    def reset(self):
+        [p.die() for p in self.player_sprites]
+        [p.resurrect() for p in self.player_sprites]
+        [self.all_sprites.add(p) for p in self.player_sprites]
+        self.alive_count = len(self.player_sprites)
+
+        move_to(self.player_starting_pos, self.player_sprites)
+        _from = (max(0, int(self.main_player.x - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
+                 max(0, int(self.main_player.y - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
+        _to = (max(0, int(self.main_player.x + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
+               max(0, int(self.main_player.y + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
+        put_at_random_empty_space(
+            [self.goal], self.main_player.collides_with_wall, _from, _to)
+
     def restart(self):
         for wall in self.wall_sprites:
             self.all_sprites.remove(wall)
             self.wall_sprites.remove(wall)
         self.spawn_random_walls()
 
-        place_for_goal = [p for p in self.player_sprites][0]
-        place_for_goal.die()
-        put_at_empty_space([place_for_goal])
-        self.goal.x, self.goal.y = place_for_goal.x, place_for_goal.y
+        self.player_starting_pos = put_at_random_empty_space(
+            self.player_sprites, self.main_player.collides_with_wall)
 
-        [p.die() for p in self.player_sprites]
-        put_at_empty_space(self.player_sprites)
-
-        [p.resurrect() for p in self.player_sprites]
-        [self.all_sprites.add(p) for p in self.player_sprites]
-        self.alive_count = len(self.player_sprites)
+        self.reset()
 
     def spawn_random_walls(self):
         for i in range(0, Settings.TILE_COUNT[0]):
@@ -310,15 +324,26 @@ class State:
 
     MENU = "menu"
     PLAY = "play"
-    PAUSE = "pause"
+    PAUSE = "(P)ause"
     QUIT = "quit"
 
 
-def put_at_empty_space(sprite_list):
-    while any([not s.is_alive for s in sprite_list]):
-        random_x = randint(0, Settings.TILE_COUNT[0] - 1)
-        random_y = randint(0, Settings.TILE_COUNT[1] - 1)
-        for s in sprite_list:
+def put_at_random_empty_space(sprite_list, collision_func, _from=(0, 0), _to=Settings.TILE_COUNT):
+    while True:
+        random_x = randint(_from[0], _to[0] - 1)
+        random_y = randint(_from[1], _to[1] - 1)
+        if collision_func(random_x, random_y):
+            continue
+        move_to((random_x, random_y), sprite_list)
+        return (random_x, random_y)
+
+
+def move_to(coords, list):
+    for s in list:
+        if hasattr(s, 'is_alive'):
             s.is_alive = True
-            s.move_ticker = s.frames_per_move + 1
-            s.move(random_x - s.x, random_y - s.y)
+        was_movable = s.is_movable
+        s.is_movable = True
+        s.move_ticker = s.frames_per_move + 1
+        s.move(coords[0] - s.x, coords[1] - s.y)
+        s.is_movable = was_movable

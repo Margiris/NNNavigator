@@ -40,7 +40,7 @@ class TiledScalableSurface(Surface):
 
     def draw(self):
         self.surface.fill(self.fill_color)
-        self.draw_grid()
+        # self.draw_grid()
         # self.draw_border()
 
     # Draw a border on surface
