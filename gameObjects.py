@@ -75,6 +75,7 @@ class Player(GameObject):
                 self.reached_goal = True
                 self.die()
             else:
+                self.brain.move(dx, dy)
                 return super().move(dx, dy)
 
     def die(self):
