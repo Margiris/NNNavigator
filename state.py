@@ -242,7 +242,7 @@ class State:
                         color = Settings.MOVING_WALL_COLOR
                         movable = True
                         movement_range = (0, randint(
-                            min_movement, space_left) if axis == 0 else 0 - randint(min_movement, space_left))
+                            min_movement, space_left) if axis == 0 else -randint(min_movement, space_left))
                     else:
                         color = Settings.WALL_COLOR
                         movable = False

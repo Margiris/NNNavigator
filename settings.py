@@ -24,19 +24,19 @@ class Settings:
     BUTTON_BG_COLOR = Color.EMERALD
     BUTTON_TEXT_COLOR = Color.WHITE
     BUTTON_TEXT_INACTIVE_COLOR = Color.shade_color(
-        BUTTON_TEXT_COLOR, 0 - COLOR_SHADE)
+        BUTTON_TEXT_COLOR, -COLOR_SHADE)
     # BUTTON_BORDER_COLOR = Color.FOREST_GREEN_CRAYOLA
 
     GOAL_COLOR = Color.WHITE
 
     PLAYER_COLOR = Color.TURQUOISE_BLUE
-    PLAYER_DEAD_COLOR = Color.shade_color(PLAYER_COLOR, 0 - COLOR_SHADE)
+    PLAYER_DEAD_COLOR = Color.shade_color(PLAYER_COLOR, -COLOR_SHADE)
 
     WALL_COLOR = Color.DARK_OLIVE_GREEN
     MOVING_WALL_COLOR = Color.FOREST_GREEN_CRAYOLA
     # MOVING_WALL_COLOR = Color.shade_color(WALL_COLOR, COLOR_SHADE)
 
-    VISION_COLOR = Color.shade_color(PLAYER_COLOR, 0 - COLOR_SHADE * 2)
+    VISION_COLOR = Color.shade_color(PLAYER_COLOR, -COLOR_SHADE * 2)
     # VISION_COLOR = Color.shade_color(GAME_BG_COLOR, 1)
     VISION_DISTANCE = 5
     GOAL_DISTANCE = 2
@@ -60,7 +60,7 @@ class Settings:
     @staticmethod
     def BUTTON_POS(i):
         if i < 0:
-            return (Settings.WINDOW_SIZE[0] - Settings.MARGINS[0] * (0 - i) - Settings.BUTTON_SIZE[0] * (0 - i),
+            return (Settings.WINDOW_SIZE[0] - Settings.MARGINS[0] * (-i) - Settings.BUTTON_SIZE[0] * (-i),
                     Settings.MARGINS[1])
         else:
             return (Settings.MARGINS[0] * (i + 1) + Settings.BUTTON_SIZE[0] * i,

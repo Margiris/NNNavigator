@@ -72,7 +72,7 @@ class Player(GameObject):
             if self.collides_with_wall(self.x + dx, self.y + dy):
                 self.die()
             elif self.x + dx == self.goal.x and self.y + dy == self.goal.y:
-                self.reached_goal = True
+                self.brain.reached_goal = True
                 self.die()
             else:
                 self.brain.move(dx, dy)
@@ -119,12 +119,12 @@ class Wall(GameObject):
     def automover(self):
         if self.max_pos > 0:
             if self.curr_pos <= 0 or self.curr_pos >= self.max_pos:
-                self.move_dir = 0 - self.move_dir
+                self.move_dir = -self.move_dir
             self.move(self.move_dir, 0)
         elif self.max_pos < 0:
             if self.curr_pos >= 0 or self.curr_pos <= self.max_pos:
-                self.move_dir = 0 - self.move_dir
-            self.move(0, 0 - self.move_dir)
+                self.move_dir = -self.move_dir
+            self.move(0, -self.move_dir)
         self.curr_pos += self.move_dir
 
     def __str__(self):

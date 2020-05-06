@@ -14,7 +14,7 @@ class Button:
         self.hover_color = Color.shade_color(
             self.bg_color, Settings.COLOR_SHADE / 2)
         self.inactive_color = Color.shade_color(
-            self.bg_color, 0 - Settings.COLOR_SHADE)
+            self.bg_color, -Settings.COLOR_SHADE)
         self.hovered = False
         self.text = text
         self.active = True

@@ -11,7 +11,8 @@ class Program:
         self.clock = pygame.time.Clock()
 
         self.surface_main = pygame.display.set_mode(
-            self.settings.WINDOW_SIZE, DOUBLEBUF | RESIZABLE)
+            # self.settings.WINDOW_SIZE, DOUBLEBUF | RESIZABLE)
+            self.settings.WINDOW_SIZE)
         pygame.display.set_caption(self.settings.WINDOW_TITLE)
         # pygame.key.set_repeat(500, 50)
 
@@ -51,9 +52,9 @@ class Program:
         for event in events:
             if event.type == pygame.QUIT:
                 self.change_to_state(State.QUIT)
-            elif event.type == VIDEORESIZE:
-                self.resize(event.dict['size'])
-                self.resize(event.dict['size'])
+            # elif event.type == VIDEORESIZE:
+            #     self.resize(event.dict['size'])
+            #     self.resize(event.dict['size'])
             # elif event.type == pygame.KEYDOWN:
 
     def update(self):
