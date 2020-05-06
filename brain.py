@@ -216,11 +216,12 @@ class Brain:
             lr=0.001), metrics=['accuracy'])
         return model
 
-    def save_model(self, max_reward=None, average_reward=None, min_reward=None):
-        filename = 'models/{}_{}'.format(self.MODEL_NAME, int(time()))
-        if max_reward:
-            filename += '_{:_>7.2f}max_{:_>7.2f}avg_{:_>7.2f}min.nnnm'.format(
-                max_reward, average_reward, min_reward)
+    def save_model(self, max_reward=None, average_reward=None, min_reward=None, filename=None):
+        if filename:
+            filename = 'models/{}'.format(filename.split('/')[-1])
+        else:
+            filename = 'models/{:_>7.2f}max_{:_>7.2f}avg_{:_>7.2f}min_{}.nnnm'.format(
+                max_reward, average_reward, min_reward, int(time()))
         self.model.save(filename)
         return filename
 

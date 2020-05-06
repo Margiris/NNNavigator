@@ -1,8 +1,10 @@
 from os import getcwd
+from time import time
+from re import split
 import pygame
 from random import randint, random
 from tkinter import Tk
-from tkinter.filedialog import askopenfile, asksaveasfile
+from tkinter.filedialog import askopenfile, asksaveasfilename
 from button import ButtonFactory
 from gameObjects import Goal, Player, Wall
 from surface import Surface, TiledScalableSurface
@@ -307,21 +309,28 @@ class State:
 
     def save_state(self):
         Tk().withdraw()
-        f = asksaveasfile(title="Save NNNavigator state",
-                          initialdir=getcwd() + "/maps",
-                          defaultextension=".nnn")
+        files = [('Neural Network Navigator file', '*.nnn')]
+        f = asksaveasfilename(title="Save NNNavigator state",
+                              initialdir=getcwd() + "/maps",
+                              defaultextension=files, filetypes=files)
         if f is None:
             return
+        timestamp = str(int(time()))
 
-        f.write(str(self.previous_state.goal) + Settings.PROP_SEP + "\n")
-        for player in self.player_sprites:
-            model_filename = player.brain.save_model()
-            f.write(str(player) + Settings.PROP_SEP +
-                    model_filename + Settings.PROP_SEP + "\n")
-        for wall in self.wall_sprites:
-            f.write(str(wall) + Settings.PROP_SEP + "\n")
+        f = split('(\.)', f)
+        f = f[:-2] + ['_', timestamp] + f[-2:]
+        f = "".join(f)
 
-        f.close()
+        with open(f, 'w') as f:
+            f.write(str(self.previous_state.goal) + Settings.PROP_SEP + "\n")
+            for player in self.player_sprites:
+                model_filename = player.brain.save_model(filename=f.name)
+                f.write(str(player) + Settings.PROP_SEP +
+                        model_filename + Settings.PROP_SEP + "\n")
+            for wall in self.wall_sprites:
+                f.write(str(wall) + Settings.PROP_SEP + "\n")
+
+        # f.close()
 
     def acknowledge_death(self, player):
         self.all_sprites.remove(player)
