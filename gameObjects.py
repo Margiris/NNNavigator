@@ -52,14 +52,14 @@ class Goal(GameObject):
 
 
 class Player(GameObject):
-    def __init__(self, sprite_groups, function, tile_size, color, coords, size=(1, 1), goal=None, walls=None, fpm=Settings.FRAMES_PER_MOVE, move_ticks=0, reached_goal=False, vision_surface=None):
+    def __init__(self, sprite_groups, function, tile_size, color, coords, size=(1, 1), goal=None, walls=None, fpm=Settings.FRAMES_PER_MOVE, move_ticks=0, reached_goal=False, vision_surface=None, model_name=None):
         super().__init__(sprite_groups, tile_size, color,
                          coords, size, True, fpm=fpm, move_ticks=move_ticks)
         self.report_death = function
         self.goal = goal
         self.walls = walls
         self.original_color = color
-        self.brain = Brain(self, vision_surface, reached_goal)
+        self.brain = Brain(self, vision_surface, reached_goal, model_name)
         self.resurrect()
 
     def update(self):

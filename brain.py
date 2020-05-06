@@ -5,7 +5,7 @@ from time import time
 
 from collections import deque
 from keras.callbacks import Callback
-from keras.models import Sequential
+from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout, Conv2D, MaxPooling2D, Activation, Flatten
 from keras.optimizers import Adam
 import tensorflow as tf
@@ -57,8 +57,8 @@ class Brain:
     MIN_EPSILON = 0.001
 
     MOVE_PENALTY = 1
-    DEATH_PENALTY = 300
-    GOAL_REWARD = 25
+    DEATH_PENALTY = -300
+    GOAL_REWARD = 100
     OBSERVATION_SPACE_VALUES = (Settings.VISION_DISTANCE * 2 + 1,
                                 Settings.VISION_DISTANCE * 2 + 1, 1)
     ACTION_SPACE_SIZE = 5
@@ -73,7 +73,7 @@ class Brain:
         4: (-1, 0),
     }
 
-    def __init__(self, player, surface, reached_goal):
+    def __init__(self, player, surface, reached_goal, file=None):
         self.ep_rewards = [self.MIN_REWARD]
         self.episode = 1
         self.episode_step = 0
@@ -87,7 +87,10 @@ class Brain:
             surface.tile_size, player.color, coords, surface.surface)
 
         # Main model
-        self.model = self.create_model()
+        if file:
+            self.model = load_model(file)
+        else:
+            self.model = self.create_model()
 
         # Target network
         self.target_model = self.create_model()
@@ -144,15 +147,17 @@ class Brain:
         self.player.move(*self.action_space[action_index])
 
         if self.player.is_alive:
-            reward = -self.MOVE_PENALTY
+            reward = self.MOVE_PENALTY
         elif self.reached_goal:
             reward = self.GOAL_REWARD
         else:
-            reward = -self.DEATH_PENALTY
+            reward = self.DEATH_PENALTY
 
         return self.player.look_square(), reward, not self.player.is_alive
 
     def die(self):
+        if self.episode_step <= 0:
+            return
         self.ep_rewards.append(self.episode_reward)
         if not self.episode % self.AGGREGATE_STATS_EVERY or self.episode == 1:
             average_reward = sum(
@@ -164,10 +169,9 @@ class Brain:
 
             # Save model, but only when min reward is greater or equal a set value
             if min_reward >= self.MIN_REWARD:
-                self.model.save(
-                    f'models/{self.MODEL_NAME}__{max_reward:_>7.2f}max_{average_reward:_>7.2f}avg_{min_reward:_>7.2f}min__{int(time())}.model')
+                self.save_model(max_reward, average_reward, min_reward)
 
-        # Decay epsilon
+                # Decay epsilon
         if self.epsilon > self.MIN_EPSILON:
             self.epsilon *= self.EPSILON_DECAY
             self.epsilon = max(self.MIN_EPSILON, self.epsilon)
@@ -212,6 +216,14 @@ class Brain:
             lr=0.001), metrics=['accuracy'])
         return model
 
+    def save_model(self, max_reward=None, average_reward=None, min_reward=None):
+        filename = 'models/{}_{}'.format(self.MODEL_NAME, int(time()))
+        if max_reward:
+            filename += '_{:_>7.2f}max_{:_>7.2f}avg_{:_>7.2f}min.nnnm'.format(
+                max_reward, average_reward, min_reward)
+        self.model.save(filename)
+        return filename
+
     # Adds step's data to a memory replay array
     # (observation space, action, reward, new observation space, done)
     def update_replay_memory(self, transition):
@@ -222,7 +234,6 @@ class Brain:
 
         # Start training only if certain number of samples is already saved
         if len(self.replay_memory) < self.MIN_REPLAY_MEMORY_SIZE:
-            print(len(self.replay_memory))
             return
 
         # Get a minibatch of random samples from memory replay table
