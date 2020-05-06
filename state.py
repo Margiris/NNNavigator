@@ -195,11 +195,12 @@ class State:
         self.alive_count = len(self.player_sprites)
 
         move_to(self.player_starting_pos, self.player_sprites)
-        # _from = (max(0, int(self.main_player.x - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
-        #          max(0, int(self.main_player.y - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
-        # _to = (max(0, int(self.main_player.x + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
-        #        max(0, int(self.main_player.y + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
-        # put_at_random_empty_space([self.goal], self.main_player.collides_with_wall, _from, _to)
+        _from = (max(0, int(self.main_player.x - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
+                 max(0, int(self.main_player.y - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
+        _to = (max(0, int(self.main_player.x + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
+               max(0, int(self.main_player.y + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
+        put_at_random_empty_space(
+            [self.goal], self.main_player.collides_with_wall, _from, _to)
 
     def restart(self):
         for wall in self.wall_sprites:
@@ -210,12 +211,12 @@ class State:
         self.player_starting_pos = put_at_random_empty_space(
             self.player_sprites, self.main_player.collides_with_wall)
 
-        _from = (max(0, int(self.main_player.x - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
-                 max(0, int(self.main_player.y - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
-        _to = (max(0, int(self.main_player.x + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
-               max(0, int(self.main_player.y + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
-        put_at_random_empty_space(
-            [self.goal], self.main_player.collides_with_wall, _from, _to)
+        # _from = (max(0, int(self.main_player.x - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
+        #          max(0, int(self.main_player.y - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
+        # _to = (max(0, int(self.main_player.x + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
+        #        max(0, int(self.main_player.y + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
+        # put_at_random_empty_space(
+        #     [self.goal], self.main_player.collides_with_wall, _from, _to)
         self.reset()
 
     def spawn_random_walls(self):

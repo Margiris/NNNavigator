@@ -49,7 +49,7 @@ class Brain:
 
     # Environment settings
     EPISODES = 20_000
-    STEPS_PER_EPISODE = 1000
+    STEPS_PER_EPISODE = 200
 
     # Exploration settings
     epsilon = 1  # not a constant, going to be decayed
