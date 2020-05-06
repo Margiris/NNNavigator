@@ -131,3 +131,7 @@ $HOME/
 
 # map saves
 maps/
+
+# NN stuff
+logs/
+models/
