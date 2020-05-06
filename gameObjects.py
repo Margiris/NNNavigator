@@ -86,6 +86,7 @@ class Player(GameObject):
         self.report_death(self)
 
     def resurrect(self):
+        self.move_ticker = 0
         self.is_alive = True
         self.color = self.original_color
         self.brain.resurrect()

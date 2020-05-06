@@ -72,7 +72,7 @@ class State:
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(4),
                                                             Settings.BUTTON_BG_COLOR, "(R)estart", self.restart))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-2),
-                                                            Settings.BUTTON_BG_COLOR, self.get_alive_count, None))
+                                                            Settings.BUTTON_BG_COLOR, self.main_player.brain.get_episode, None))
             self.buttons[-1].active = False
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-1),
                                                             Settings.BUTTON_BG_COLOR, program.clock.get_fps, program.limit_fps))
@@ -104,7 +104,7 @@ class State:
                                                             Settings.BUTTON_BG_COLOR, "(R)estart", self.restart))
             self.buttons[-1].active = False
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-2),
-                                                            Settings.BUTTON_BG_COLOR, self.previous_state.get_alive_count, None))
+                                                            Settings.BUTTON_BG_COLOR, self.previous_state.main_player.brain.get_episode_step, None))
             self.buttons[-1].active = False
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-1),
                                                             Settings.BUTTON_BG_COLOR, program.clock.get_fps, program.limit_fps))
@@ -191,7 +191,7 @@ class State:
                     break
 
     def reset(self):
-        [p.die() for p in self.player_sprites]
+        [p.die() for p in self.player_sprites if p.is_alive]
         [p.resurrect() for p in self.player_sprites]
         [self.all_sprites.add(p) for p in self.player_sprites]
         self.alive_count = len(self.player_sprites)
@@ -362,6 +362,8 @@ def move_to(coords, list):
             s.is_alive = True
         was_movable = s.is_movable
         s.is_movable = True
+        was_move_ticker = s.move_ticker
         s.move_ticker = s.frames_per_move + 1
         s.move(coords[0] - s.x, coords[1] - s.y)
         s.is_movable = was_movable
+        s.move_ticker = was_move_ticker

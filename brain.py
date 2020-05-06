@@ -106,35 +106,41 @@ class Brain:
         # Used to count when to update target network with main network's weights
         self.target_update_counter = 0
 
+    def get_episode(self):
+        return self.episode
+
+    def get_episode_step(self):
+        return self.episode_step
+
     def update(self):
-        if self.player.move_ticker > self.player.frames_per_move:
-            # random_x = random.randint(-1, 1)
-            # random_y = random.randint(-1, 1)
-            # self.player.move(random_x, random_y)
+        if self.player.move_ticker <= self.player.frames_per_move:
+            return
+        # random_x = random.randint(-1, 1)
+        # random_y = random.randint(-1, 1)
+        # self.player.move(random_x, random_y)
 
-            # This part stays mostly the same, the change is to query a model for Q values
-            if numpy.random.random() > self.epsilon:
-                # Get action from Q table
-                action = numpy.argmax(self.get_qs())
-            else:
-                # Get random action
-                action = numpy.random.randint(0, self.ACTION_SPACE_SIZE)
+        # This part stays mostly the same, the change is to query a model for Q values
+        if numpy.random.random() > self.epsilon:
+            # Get action from Q table
+            action = numpy.argmax(self.get_qs())
+        else:
+            # Get random action
+            action = numpy.random.randint(0, self.ACTION_SPACE_SIZE)
 
-            new_state, reward, done = self.do_step(action)
+        new_state, reward, done = self.do_step(action)
 
-            # Transform new continous state to new discrete state and count reward
-            self.episode_reward += reward
+        # Transform new continous state to new discrete state and count reward
+        self.episode_reward += reward
 
-            # Every step we update replay memory and train main network
-            self.update_replay_memory(
-                (self.current_state, action, reward, new_state, done))
-            self.train(done, self.step)
+        # Every step we update replay memory and train main network
+        self.update_replay_memory(
+            (self.current_state, action, reward, new_state, done))
+        self.train(done, self.episode_step + 1)
 
-            self.current_state = new_state
-            self.step += 1
+        self.current_state = new_state
 
-            if self.episode_step >= self.STEPS_PER_EPISODE:
-                self.player.die()
+        if self.episode_step >= self.STEPS_PER_EPISODE:
+            self.player.die()
 
     def move(self, dx=0, dy=0):
         self.visionSprite.move(dx, dy)
@@ -186,7 +192,7 @@ class Brain:
         self.episode_reward = 0
         self.episode_step = 0
         self.current_state = self.player.look_square()
-        self.step = 1
+        # self.step = 1
         self.current_state = self.player.look_square()
 
     def __str__(self):
