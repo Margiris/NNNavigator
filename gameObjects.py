@@ -55,7 +55,8 @@ class Player(GameObject):
     def __init__(self, sprite_groups, function, tile_size, color, coords, size=(1, 1), goal=None, walls=None, fpm=Settings.FRAMES_PER_MOVE, move_ticks=0, reached_goal=False, vision_surface=None, model_name=None):
         super().__init__(sprite_groups, tile_size, color,
                          coords, size, True, fpm=fpm, move_ticks=move_ticks)
-        self.report_death = function
+        self.celebration_count = 0
+        self.report = function
         self.goal = goal
         self.walls = walls
         self.original_color = color
@@ -72,10 +73,9 @@ class Player(GameObject):
         if self.is_alive and self.move_ticker > self.frames_per_move:
             if self.collides_with_wall(self.x + dx, self.y + dy):
                 self.die()
-            elif self.x + dx == self.goal.x and self.y + dy == self.goal.y:
-                self.brain.reached_goal = True
-                self.die()
             else:
+                if self.x + dx == self.goal.x and self.y + dy == self.goal.y:
+                    self.celebrate()
                 self.brain.move(dx, dy)
                 return super().move(dx, dy)
 
@@ -83,7 +83,15 @@ class Player(GameObject):
         self.is_alive = False
         self.color = Settings.PLAYER_DEAD_COLOR
         self.brain.die()
-        self.report_death(self)
+        self.report(self)
+
+    def celebrate(self):
+        self.brain.reached_goal = True
+        self.celebration_count += 1
+        self.report(self)
+
+    def get_celebrations(self):
+        return '{:>.0f}/{:d}'.format(self.brain.episode_reward / self.brain.GOAL_REWARD, self.celebration_count)
 
     def resurrect(self):
         self.move_ticker = 0

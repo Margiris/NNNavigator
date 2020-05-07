@@ -38,7 +38,7 @@ class Brain:
     # Agent class
 
     DISCOUNT = 0.99
-    REPLAY_MEMORY_SIZE = 50_000  # How many last steps to keep for model training
+    REPLAY_MEMORY_SIZE = 500_000  # How many last steps to keep for model training
     # Minimum number of steps in a memory to start training
     MIN_REPLAY_MEMORY_SIZE = 1_000
     MINIBATCH_SIZE = 64  # How many steps (samples) to use for training
@@ -56,12 +56,11 @@ class Brain:
     EPSILON_DECAY = 0.99975
     MIN_EPSILON = 0.001
 
-    MOVE_PENALTY = 1
+    MOVE_PENALTY = 0
     DEATH_PENALTY = -300
     GOAL_REWARD = 100
     OBSERVATION_SPACE_VALUES = (Settings.VISION_DISTANCE * 2 + 1,
                                 Settings.VISION_DISTANCE * 2 + 1, 1)
-    ACTION_SPACE_SIZE = 5
 
     AGGREGATE_STATS_EVERY = 50  # episodes
 
@@ -72,6 +71,7 @@ class Brain:
         3: (0, 1),
         4: (-1, 0),
     }
+    ACTION_SPACE_SIZE = len(action_space)
 
     def __init__(self, player, surface, reached_goal, file=None):
         self.ep_rewards = [self.MIN_REWARD]
@@ -107,10 +107,7 @@ class Brain:
         self.target_update_counter = 0
 
     def get_episode(self):
-        return self.episode
-
-    def get_episode_step(self):
-        return self.episode_step
+        return '{:>d}/{:>3d} (d)'.format(self.episode, self.episode_step)
 
     def update(self):
         if self.player.move_ticker <= self.player.frames_per_move:
@@ -152,10 +149,11 @@ class Brain:
         self.episode_step += 1
         self.player.move(*self.action_space[action_index])
 
-        if self.player.is_alive:
-            reward = self.MOVE_PENALTY
-        elif self.reached_goal:
+        if self.reached_goal:
             reward = self.GOAL_REWARD
+            self.reached_goal = False
+        elif self.player.is_alive:
+            reward = self.MOVE_PENALTY
         else:
             reward = self.DEATH_PENALTY
 
@@ -185,6 +183,7 @@ class Brain:
         self.episode += 1
 
     def resurrect(self):
+        self.reached_goal = False
         # Update tensorboard step every episode
         self.tensorboard.step = self.episode
 

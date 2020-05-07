@@ -58,7 +58,7 @@ class State:
             #     Player((self.all_sprites, self.player_sprites), self.acknowledge_death,
             #            self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (10, 8), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0])
 
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(3),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(2),
                                                             Settings.BUTTON_BG_COLOR, "(P)ause",
                                                             program.change_to_state, State.PAUSE))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
@@ -67,15 +67,17 @@ class State:
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(1),
                                                             Settings.BUTTON_BG_COLOR, "Load", self.load_state))
             self.buttons[-1].active = False
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(5),
-                                                            Settings.BUTTON_BG_COLOR, "Rese(t)", self.reset))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(4),
+                                                            Settings.BUTTON_BG_COLOR, "Rese(t)", self.reset))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(3),
                                                             Settings.BUTTON_BG_COLOR, "(R)estart", self.restart))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-2),
-                                                            Settings.BUTTON_BG_COLOR, self.main_player.brain.get_episode, None))
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-3),
+                                                            Settings.BUTTON_BG_COLOR, self.main_player.get_celebrations, None))
             self.buttons[-1].active = False
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-2),
+                                                            Settings.BUTTON_BG_COLOR, self.main_player.brain.get_episode, self.toggle_game_draw))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-1),
-                                                            Settings.BUTTON_BG_COLOR, program.clock.get_fps, program.limit_fps))
+                                                            Settings.BUTTON_BG_COLOR, program.get_fps, program.limit_fps))
             self.restart()
         elif self == State.PAUSE:
             self.handle_specific_events = self.handle_events_pause
@@ -90,24 +92,27 @@ class State:
                                          program.settings.BUTTON_BAR_DIMENSIONS_CURRENT,
                                          Settings.BUTTON_BAR_POS, Settings.BACKGROUND_COLOR))
 
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(3),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(2),
                                                             Settings.BUTTON_BG_COLOR, "Un(p)ause",
                                                             program.change_to_state, self.previous_state))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(0),
                                                             Settings.BUTTON_BG_COLOR, "Save", self.save_state))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(1),
                                                             Settings.BUTTON_BG_COLOR, "Load", self.load_state))
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(5),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(4),
                                                             Settings.BUTTON_BG_COLOR, "Rese(t)", self.reset))
             self.buttons[-1].active = False
-            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(4),
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(3),
                                                             Settings.BUTTON_BG_COLOR, "(R)estart", self.restart))
             self.buttons[-1].active = False
+            self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-3),
+                                                            Settings.BUTTON_BG_COLOR, self.previous_state.main_player.get_celebrations, None))
+            self.buttons[-1].active = False
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-2),
-                                                            Settings.BUTTON_BG_COLOR, self.previous_state.main_player.brain.get_episode_step, None))
+                                                            Settings.BUTTON_BG_COLOR, self.previous_state.main_player.brain.get_episode, self.toggle_game_draw))
             self.buttons[-1].active = False
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-1),
-                                                            Settings.BUTTON_BG_COLOR, program.clock.get_fps, program.limit_fps))
+                                                            Settings.BUTTON_BG_COLOR, program.get_fps, program.limit_fps))
             self.buttons[-1].active = False
 
     def update(self):
@@ -119,7 +124,18 @@ class State:
             if self.all_sprites:
                 self.all_sprites.update()
             if self.alive_count <= 0:
-                self.reset()
+                if self.main_player.brain.episode % 200 == 0 or self.main_player.brain.episode_step < 1:
+                    min_reward = min(
+                        self.main_player.brain.ep_rewards[-self.main_player.brain.AGGREGATE_STATS_EVERY:])
+                    gradual_min_reward = self.main_player.brain.MIN_REWARD + \
+                        self.main_player.brain.episode / 100
+
+                    if min_reward > gradual_min_reward:
+                        self.main_player.brain.MIN_REWARD = gradual_min_reward
+                        Settings.GOAL_DISTANCE *= 1.1
+                    self.restart()
+                else:
+                    self.reset()
 
     def draw(self):
         if self.draw_game:
@@ -154,8 +170,11 @@ class State:
                         button.click()
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_d:
-                    self.draw_game = not self.draw_game
-                    self.surfaces[0].draw()
+                    self.toggle_game_draw()
+
+    def toggle_game_draw(self):
+        self.draw_game = not self.draw_game
+        self.surfaces[0].draw()
 
     def handle_events_menu(self, program, events):
         pass
@@ -197,12 +216,7 @@ class State:
         self.alive_count = len(self.player_sprites)
 
         move_to(self.player_starting_pos, self.player_sprites)
-        _from = (max(0, int(self.main_player.x - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
-                 max(0, int(self.main_player.y - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
-        _to = (max(0, int(self.main_player.x + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
-               max(0, int(self.main_player.y + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
-        put_at_random_empty_space(
-            [self.goal], self.main_player.collides_with_wall, _from, _to)
+        self.respawn_goal()
 
     def restart(self):
         for wall in self.wall_sprites:
@@ -333,9 +347,19 @@ class State:
         # f.close()
 
     def acknowledge_death(self, player):
-        self.all_sprites.remove(player)
-        self.alive_count -= 1
-        return "ok"
+        if player.brain.reached_goal:
+            self.respawn_goal()
+        else:
+            self.all_sprites.remove(player)
+            self.alive_count -= 1
+
+    def respawn_goal(self):
+        _from = (max(0, int(self.main_player.x - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
+                 max(0, int(self.main_player.y - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
+        _to = (max(0, int(self.main_player.x + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
+               max(0, int(self.main_player.y + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
+        put_at_random_empty_space(
+            [self.goal], self.main_player.collides_with_wall, _from, _to)
 
     def get_alive_count(self):
         return self.alive_count

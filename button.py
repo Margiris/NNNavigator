@@ -21,7 +21,7 @@ class Button:
         self.function = function
         self.args = args
         self.font = pygame.font.SysFont(
-            'Arial', Settings.BUTTON_TEXT_SIZE, bold=True)
+            'Consolas', Settings.BUTTON_TEXT_SIZE, bold=True)
 
     @property
     def x(self):
@@ -62,7 +62,7 @@ class Button:
 
     def show_text(self):
         if self.text is not None:
-            string = '{:.2f}'.format(self.text()) if callable(
+            string = self.text() if callable(
                 self.text) else self.text
             text_color = Settings.BUTTON_TEXT_COLOR if self.active else Settings.BUTTON_TEXT_INACTIVE_COLOR
             text = self.font.render(string, True, text_color)

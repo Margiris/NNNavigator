@@ -14,7 +14,7 @@ class Settings:
     WALL_SPAWN_RATE = 0.2
     MOVING_WALL_SPAWN_RATE = WALL_SPAWN_RATE * 0.8
 
-    SCALE = 1.5
+    SCALE = 1.7
 
     COLOR_SHADE = 30
     BACKGROUND_COLOR = Color.KOMBU_GREEN
@@ -39,7 +39,7 @@ class Settings:
     VISION_COLOR = Color.shade_color(PLAYER_COLOR, -COLOR_SHADE * 2)
     # VISION_COLOR = Color.shade_color(GAME_BG_COLOR, 1)
     VISION_DISTANCE = 5
-    GOAL_DISTANCE = 1
+    GOAL_DISTANCE = 1.0
 
     WINDOW_TITLE = "NNNavigator"
 
@@ -49,13 +49,13 @@ class Settings:
     WINDOW_SIZE = (GAME_DIMENSIONS[0] + LINE_WIDTH * 2,
                    GAME_DIMENSIONS[1] + 0)
 
-    MARGINS = (int(round(GAME_DIMENSIONS[0] / 64 * SCALE)),
+    MARGINS = (int(round(GAME_DIMENSIONS[0] / 128 * SCALE)),
                int(round(GAME_DIMENSIONS[1] / 128 * SCALE)))
 
-    BUTTON_TEXT_SIZE = int(round(GAME_DIMENSIONS[1] / 64 * SCALE))
+    BUTTON_TEXT_SIZE = int(round(GAME_DIMENSIONS[1] / 76 * SCALE))
 
     BUTTON_SIZE = (int(round(GAME_DIMENSIONS[0] / 16 * SCALE)),
-                   int(round(GAME_DIMENSIONS[1] / 32 * SCALE)))
+                   int(round(GAME_DIMENSIONS[1] / 48 * SCALE)))
 
     @staticmethod
     def BUTTON_POS(i):

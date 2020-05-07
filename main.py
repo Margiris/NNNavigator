@@ -11,10 +11,9 @@ class Program:
         self.clock = pygame.time.Clock()
 
         self.surface_main = pygame.display.set_mode(
-            # self.settings.WINDOW_SIZE, DOUBLEBUF | RESIZABLE)
-            self.settings.WINDOW_SIZE)
+            self.settings.WINDOW_SIZE, DOUBLEBUF | RESIZABLE)
+        # self.settings.WINDOW_SIZE)
         pygame.display.set_caption(self.settings.WINDOW_TITLE)
-        # pygame.key.set_repeat(500, 50)
 
         self.state = None
         self.change_to_state(State.PLAY)
@@ -52,10 +51,12 @@ class Program:
         for event in events:
             if event.type == pygame.QUIT:
                 self.change_to_state(State.QUIT)
-            # elif event.type == VIDEORESIZE:
-            #     self.resize(event.dict['size'])
-            #     self.resize(event.dict['size'])
-            # elif event.type == pygame.KEYDOWN:
+            elif event.type == VIDEORESIZE:
+                self.resize(event.dict['size'])
+                self.resize(event.dict['size'])
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_f:
+                    self.limit_fps()
 
     def update(self):
         self.state.update()
@@ -80,6 +81,9 @@ class Program:
             self.settings.MAX_FPS = Settings.MAX_FPS
         else:
             self.settings.MAX_FPS *= 100
+
+    def get_fps(self):
+        return '{:>6.2f} (f)'.format(self.clock.get_fps())
 
 
 if __name__ == "__main__":
