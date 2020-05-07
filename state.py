@@ -285,6 +285,9 @@ class State:
             self.previous_state.alive_count += 1
             if props[9] != "True":
                 self.previous_state.main_player.die()
+            self.previous_state.buttons[-3].text = self.previous_state.main_player.get_celebrations
+            self.previous_state.buttons[-2].text = self.previous_state.main_player.brain.get_episode
+
         elif props[0] == "W":
             Wall((self.previous_state.all_sprites, self.previous_state.wall_sprites), self.previous_state.surfaces[0].tile_size, color, (int(props[2]), int(
                 props[3])), (int(props[4]), int(props[5])), is_movable=props[6] == "True", fpm=int(props[7]), move_ticks=int(props[8]), movement_range=(int(props[9]), int(props[10])), move_dir=int(props[11]))
@@ -327,18 +330,20 @@ class State:
         f = asksaveasfilename(title="Save NNNavigator state",
                               initialdir=getcwd() + "/maps",
                               defaultextension=files, filetypes=files)
-        if f is None:
+        if f is None or f == '':
             return
         timestamp = str(int(time()))
 
         f = split('(\.)', f)
+        model_filename = "".join(f[:-3])
         f = f[:-2] + ['_', timestamp] + f[-2:]
         f = "".join(f)
 
         with open(f, 'w') as f:
             f.write(str(self.previous_state.goal) + Settings.PROP_SEP + "\n")
             for player in self.player_sprites:
-                model_filename = player.brain.save_model(filename=f.name)
+                model_filename = player.brain.save_model(
+                    filename=model_filename)
                 f.write(str(player) + Settings.PROP_SEP +
                         model_filename + Settings.PROP_SEP + "\n")
             for wall in self.wall_sprites:

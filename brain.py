@@ -223,7 +223,7 @@ class Brain:
 
     def save_model(self, max_reward=None, average_reward=None, min_reward=None, filename=None):
         if filename:
-            filename = 'models/{}'.format(filename.split('/')[-1])
+            filename = 'models/{}.nnnm'.format(filename.split('/')[-1])
         else:
             filename = 'models/{:_>7.2f}max_{:_>7.2f}avg_{:_>7.2f}min_{}.nnnm'.format(
                 max_reward, average_reward, min_reward, int(time()))
