@@ -16,6 +16,7 @@ class Program:
         pygame.display.set_caption(self.settings.WINDOW_TITLE)
 
         self.state = None
+        self.limit_fps()
         self.change_to_state(State.PLAY)
 
     def change_to_state(self, state):

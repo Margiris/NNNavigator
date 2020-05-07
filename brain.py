@@ -38,7 +38,7 @@ class Brain:
     # Agent class
 
     DISCOUNT = 0.99
-    REPLAY_MEMORY_SIZE = 500_000  # How many last steps to keep for model training
+    REPLAY_MEMORY_SIZE = 50_000  # How many last steps to keep for model training
     # Minimum number of steps in a memory to start training
     MIN_REPLAY_MEMORY_SIZE = 1_000
     MINIBATCH_SIZE = 64  # How many steps (samples) to use for training
@@ -107,7 +107,7 @@ class Brain:
         self.target_update_counter = 0
 
     def get_episode(self):
-        return '{:>d}/{:>3d} (d)'.format(self.episode, self.episode_step)
+        return '{:d}/{:>3d} (d)'.format(self.episode, self.episode_step)
 
     def update(self):
         if self.player.move_ticker <= self.player.frames_per_move:
@@ -169,7 +169,7 @@ class Brain:
             min_reward = min(self.ep_rewards[-self.AGGREGATE_STATS_EVERY:])
             max_reward = max(self.ep_rewards[-self.AGGREGATE_STATS_EVERY:])
             self.tensorboard.update_stats(
-                reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=self.epsilon)
+                reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=self.epsilon, goals_per_life=self.player.celebration_per_life)
 
             # Save model, but only when min reward is greater or equal a set value
             if min_reward >= self.MIN_REWARD:
