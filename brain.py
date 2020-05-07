@@ -169,7 +169,7 @@ class Brain:
             min_reward = min(self.ep_rewards[-self.AGGREGATE_STATS_EVERY:])
             max_reward = max(self.ep_rewards[-self.AGGREGATE_STATS_EVERY:])
             self.tensorboard.update_stats(
-                reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=self.epsilon, goals_per_life=self.player.celebration_per_life)
+                reward_avg=average_reward, reward_min=min_reward, reward_max=max_reward, epsilon=self.epsilon)
 
             # Save model, but only when min reward is greater or equal a set value
             if min_reward >= self.MIN_REWARD:

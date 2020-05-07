@@ -88,14 +88,12 @@ class Player(GameObject):
     def celebrate(self):
         self.brain.reached_goal = True
         self.celebration_count += 1
-        self.celebration_per_life += 1
         self.report(self)
 
     def get_celebrations(self):
-        return '{:d}/{:d}'.format(self.celebration_per_life, self.celebration_count)
+        return '{:.0f}/{:d}'.format(self.brain.episode_reward / self.brain.GOAL_REWARD, self.celebration_count)
 
     def resurrect(self):
-        self.celebration_per_life = 0
         self.move_ticker = 0
         self.is_alive = True
         self.color = self.original_color
