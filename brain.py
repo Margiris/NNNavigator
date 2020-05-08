@@ -56,7 +56,7 @@ class Brain:
     EPSILON_DECAY = 0.99975
     MIN_EPSILON = 0.001
 
-    MOVE_PENALTY = 0
+    MOVE_PENALTY = -1.5
     DEATH_PENALTY = -500
     GOAL_REWARD = 500
     OBSERVATION_SPACE_VALUES = (Settings.VISION_DISTANCE * 2 + 1,
@@ -90,10 +90,10 @@ class Brain:
         if file:
             self.model = load_model(file)
         else:
-            self.model = self.create_model()
+            self.model = self.create_model_flat()
 
         # Target network
-        self.target_model = self.create_model()
+        self.target_model = self.create_model_flat()
         self.target_model.set_weights(self.model.get_weights())
 
         # An array with last n steps for training
@@ -216,6 +216,19 @@ class Brain:
         model.add(Dense(64))
 
         # ACTION_SPACE_SIZE = how many choices (9)
+        model.add(Dense(self.ACTION_SPACE_SIZE, activation='linear'))
+        model.compile(loss="mse", optimizer=Adam(
+            lr=0.001), metrics=['accuracy'])
+        return model
+
+    def create_model_flat(self):
+        model = Sequential()
+
+        model.add(Flatten(input_shape=self.OBSERVATION_SPACE_VALUES))
+        model.add(Dense(128, activation='relu'))
+        model.add(Dense(128, activation='relu'))
+        model.add(Dense(128, activation='relu'))
+        # model.add(Dense(self.ACTION_SPACE_SIZE, activation='softmax'))
         model.add(Dense(self.ACTION_SPACE_SIZE, activation='linear'))
         model.compile(loss="mse", optimizer=Adam(
             lr=0.001), metrics=['accuracy'])
