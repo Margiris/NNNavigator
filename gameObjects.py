@@ -1,3 +1,4 @@
+from math import cos, atan2, pi
 import pygame
 import numpy
 from brain import Brain
@@ -52,9 +53,21 @@ class Goal(GameObject):
 
 
 class Player(GameObject):
+    DIRECTIONS = {0: (0, -1),
+                  1: (1, -1),
+                  2: (1, 0),
+                  3: (1, 1),
+                  4: (0, 1),
+                  5: (-1, 1),
+                  6: (-1, 0),
+                  7: (-1, -1)}
+
     def __init__(self, sprite_groups, function, tile_size, color, coords, size=(1, 1), goal=None, walls=None, fpm=Settings.FRAMES_PER_MOVE, move_ticks=0, reached_goal=False, vision_surface=None, model_name=None):
         super().__init__(sprite_groups, tile_size, color,
                          coords, size, True, fpm=fpm, move_ticks=move_ticks)
+        self.vision_cells = self.init_vision()
+        self.vision = numpy.ones(
+            Brain.OBSERVATION_SPACE_VALUES, dtype=numpy.float32)
         self.celebration_count = 0
         self.report = function
         self.goal = goal
@@ -62,6 +75,14 @@ class Player(GameObject):
         self.original_color = color
         self.brain = Brain(self, vision_surface, reached_goal, model_name)
         self.resurrect()
+
+    def init_vision(self):
+        vision_cells = [set() for _ in range(10)]
+        for i in range(1, Settings.VISION_DISTANCE + 1):
+            for d, coord in self.DIRECTIONS.items():
+                vision_cells[d].add((coord[0] * i, coord[1] * i))
+
+        return vision_cells
 
     def update(self):
         self.brain.update()
@@ -105,24 +126,35 @@ class Player(GameObject):
                 return True
         return False
 
-    # def look_8_ways(self):
-    #     vision_cells = []
-    #     vision = [None for _ in range(8)]
-    #     index = 0
-    #     for y in range(-1, 2):
-    #         for x in range(-1, 2):
-    #             if x == 0 and y == 0:
-    #                 continue
-    #             vision[index] = 0
-    #             for i in range(1, Settings.VISION_DISTANCE + 1):
-    #                 if self.collides_with_wall(self.x + x * i, self.y + y * i):
-    #                     vision[index] = Settings.VISION_DISTANCE - i + 1
-    #                     break
-    #                 else:
-    #                     vision_cells.append((self.x + x * i,
-    #                                          self.y + y * i))
-    #             index += 1
-    #     return vision, vision_cells
+    def look_8_ways(self):
+        self.vision_distance = numpy.ones(
+            self.brain.OBSERVATION_SPACE_VALUES, dtype=numpy.float32)
+        for wall in self.walls:
+            x = wall.x - self.x
+            y = wall.y - self.y
+            if x > Settings.VISION_DISTANCE or y > Settings.VISION_DISTANCE:
+                continue
+            a = numpy.array((0, 0))
+            b = numpy.array((x, y))
+            for direction in range(8):
+                if (x, y) in self.vision_cells[direction]:
+                    dist = (int(numpy.linalg.norm(a-b)) - 1) / \
+                        Settings.VISION_DISTANCE
+                    if self.vision_distance[direction] > dist:
+                        self.vision_distance[direction] = dist
+                    break
+
+        a = numpy.array((self.x, self.y))
+        b = numpy.array((self.goal.x, self.goal.y))
+        self.vision_distance[8] = int(
+            numpy.linalg.norm(a-b)) / Settings.VISION_DISTANCE
+        print(self.vision_distance[8])
+        self.vision_distance[9] = angle_between(
+            (self.x, self.y), (self.goal.x, self.goal.y))
+
+        # self.vision_distance[9] = numpy.math.atan2(
+        #     numpy.linalg.det([a-b]), numpy.dot(a-b))
+        return self.vision_distance
 
     def look_square(self):
         vision = numpy.zeros(
@@ -180,3 +212,11 @@ class Wall(GameObject):
 
 def tuple__str__(t):
     return Settings.TUPLE_SEP.join([str(c) for c in t])
+
+
+def angle_between(v1, v2):
+    dx = v2[0] - v1[0]
+    dy = v2[1] - v1[1]
+    rads = atan2(-dy, dx)
+    rads %= 2*pi
+    return cos(rads)

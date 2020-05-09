@@ -1,5 +1,5 @@
 import numpy
-from pygame import Surface
+from pygame import Surface, draw
 import random
 from time import time
 
@@ -43,7 +43,7 @@ class Brain:
     MIN_REPLAY_MEMORY_SIZE = 1_000
     MINIBATCH_SIZE = 64  # How many steps (samples) to use for training
     UPDATE_TARGET_EVERY = 5  # Terminal states (end of episodes)
-    MODEL_NAME = 'NNNavigator'
+    MODEL_NAME = 'NNNavigator-vision-128-flat'
     MIN_REWARD = 0  # For model save
     MEMORY_FRACTION = 0.20
 
@@ -56,11 +56,10 @@ class Brain:
     EPSILON_DECAY = 0.99975
     MIN_EPSILON = 0.001
 
-    MOVE_PENALTY = -1.5
+    MOVE_PENALTY = -1
     DEATH_PENALTY = -500
     GOAL_REWARD = 500
-    OBSERVATION_SPACE_VALUES = (Settings.VISION_DISTANCE * 2 + 1,
-                                Settings.VISION_DISTANCE * 2 + 1, 1)
+    OBSERVATION_SPACE_VALUES = (10, 1)
 
     AGGREGATE_STATS_EVERY = 50  # episodes
 
@@ -81,10 +80,10 @@ class Brain:
         self.surface = surface
         self.reached_goal = reached_goal
 
-        coords = (self.player.x - Settings.VISION_DISTANCE,
-                  self.player.y - Settings.VISION_DISTANCE)
-        self.visionSprite = VisionSurface(
-            surface.tile_size, player.color, coords, surface.surface)
+        # coords = (self.player.x - Settings.VISION_DISTANCE,
+        #           self.player.y - Settings.VISION_DISTANCE)
+        # self.visionSprite = VisionSurface(
+        #     surface.tile_size, player.color, coords, surface.surface)
 
         # Main model
         if file:
@@ -101,7 +100,7 @@ class Brain:
 
         # Custom tensorboard object
         self.tensorboard = TensorBoard(
-            log_dir="logs/{}-{}".format('NNNavigator', int(time())))
+            log_dir="logs/{}-{}".format(MODEL_NAME, int(time())))
 
         # Used to count when to update target network with main network's weights
         self.target_update_counter = 0
@@ -120,6 +119,7 @@ class Brain:
         if numpy.random.random() > self.epsilon:
             # Get action from Q table
             action = numpy.argmax(self.get_qs())
+            print(action)
         else:
             # Get random action
             action = numpy.random.randint(0, self.ACTION_SPACE_SIZE)
@@ -140,24 +140,39 @@ class Brain:
             self.player.die()
 
     def move(self, dx=0, dy=0):
-        self.visionSprite.move(dx, dy)
+        # self.visionSprite.move(dx, dy)
+        pass
 
     def draw(self):
-        self.visionSprite.draw()
+        # self.visionSprite.draw()
+        start_pos = (self.player.rect[0] + self.player.tile_size[0] / 2,
+                     self.player.rect[1] + self.player.tile_size[1] / 2)
+        # start_pos = (self.player.rect[0], self.player.rect[1])
+        for direction, coord in self.player.DIRECTIONS.items():
+            end_pos = (start_pos[0] + coord[0] * self.player.vision_distance[direction][0] * self.player.tile_size[0] * Settings.VISION_DISTANCE,
+                       start_pos[1] + coord[1] * self.player.vision_distance[direction][0] * self.player.tile_size[1] * Settings.VISION_DISTANCE)
+            draw.line(self.surface.surface,
+                      Settings.PLAYER_VISION_COLOR, start_pos, end_pos)
+        end_pos = (self.player.goal.rect[0] + self.player.tile_size[0] / 2,
+                   self.player.goal.rect[1] + self.player.tile_size[1] / 2)
+        draw.line(self.surface.surface,
+                  Settings.GOAL_COLOR, start_pos, end_pos)
 
     def do_step(self, action_index):
         self.episode_step += 1
         self.player.move(*self.action_space[action_index])
 
+        new_state = self.player.look_8_ways()
+
         if self.reached_goal:
             reward = self.GOAL_REWARD
             self.reached_goal = False
         elif self.player.is_alive:
-            reward = self.MOVE_PENALTY
+            reward = self.MOVE_PENALTY * new_state[8][0]
         else:
             reward = self.DEATH_PENALTY
 
-        return self.player.look_square(), reward, not self.player.is_alive
+        return self.player.look_8_ways(), reward, not self.player.is_alive
 
     def die(self):
         if self.episode_step <= 0:
@@ -190,9 +205,9 @@ class Brain:
         # Restarting episode - reset episode reward and step number
         self.episode_reward = 0
         self.episode_step = 0
-        self.current_state = self.player.look_square()
+        self.current_state = self.player.look_8_ways()
         # self.step = 1
-        self.current_state = self.player.look_square()
+        self.current_state = self.player.look_8_ways()
 
     def __str__(self):
         return Settings.TUPLE_SEP.join([str(self.reached_goal)])
@@ -225,9 +240,9 @@ class Brain:
         model = Sequential()
 
         model.add(Flatten(input_shape=self.OBSERVATION_SPACE_VALUES))
-        model.add(Dense(128, activation='relu'))
-        model.add(Dense(128, activation='relu'))
-        model.add(Dense(128, activation='relu'))
+        model.add(Dense(64, activation='relu'))
+        model.add(Dense(32, activation='relu'))
+        model.add(Dense(16, activation='relu'))
         # model.add(Dense(self.ACTION_SPACE_SIZE, activation='softmax'))
         model.add(Dense(self.ACTION_SPACE_SIZE, activation='linear'))
         model.compile(loss="mse", optimizer=Adam(

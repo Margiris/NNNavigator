@@ -31,6 +31,7 @@ class Settings:
 
     PLAYER_COLOR = Color.TURQUOISE_BLUE
     PLAYER_DEAD_COLOR = Color.shade_color(PLAYER_COLOR, -COLOR_SHADE)
+    PLAYER_VISION_COLOR = Color.shade_color(PLAYER_COLOR, COLOR_SHADE)
 
     WALL_COLOR = Color.DARK_OLIVE_GREEN
     MOVING_WALL_COLOR = Color.FOREST_GREEN_CRAYOLA
@@ -38,7 +39,7 @@ class Settings:
 
     VISION_COLOR = Color.shade_color(PLAYER_COLOR, -COLOR_SHADE * 2)
     # VISION_COLOR = Color.shade_color(GAME_BG_COLOR, 1)
-    VISION_DISTANCE = 5
+    VISION_DISTANCE = 128
     GOAL_DISTANCE = 1.0
 
     WINDOW_TITLE = "NNNavigator"
