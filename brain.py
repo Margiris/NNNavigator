@@ -119,7 +119,6 @@ class Brain:
         if numpy.random.random() > self.epsilon:
             # Get action from Q table
             action = numpy.argmax(self.get_qs())
-            print(action)
         else:
             # Get random action
             action = numpy.random.randint(0, self.ACTION_SPACE_SIZE)
