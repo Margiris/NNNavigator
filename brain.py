@@ -56,9 +56,9 @@ class Brain:
     EPSILON_DECAY = 0.99975
     MIN_EPSILON = 0.001
 
-    MOVE_PENALTY = 0
+    MOVE_PENALTY = -1
     DEATH_PENALTY = -500
-    GOAL_REWARD = 500
+    GOAL_REWARD = 1500
     OBSERVATION_SPACE_VALUES = (Settings.VISION_DISTANCE * 2 + 1,
                                 Settings.VISION_DISTANCE * 2 + 1, 1)
 
