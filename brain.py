@@ -100,7 +100,7 @@ class Brain:
 
         # Custom tensorboard object
         self.tensorboard = TensorBoard(
-            log_dir="logs/{}-{}".format(MODEL_NAME, int(time())))
+            log_dir="logs/{}-{}".format(self.MODEL_NAME, int(time())))
 
         # Used to count when to update target network with main network's weights
         self.target_update_counter = 0

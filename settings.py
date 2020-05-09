@@ -40,7 +40,7 @@ class Settings:
     VISION_COLOR = Color.shade_color(PLAYER_COLOR, -COLOR_SHADE * 2)
     # VISION_COLOR = Color.shade_color(GAME_BG_COLOR, 1)
     VISION_DISTANCE = 128
-    GOAL_DISTANCE = 1.0
+    GOAL_DISTANCE = 0.2
 
     WINDOW_TITLE = "NNNavigator"
 

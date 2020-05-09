@@ -67,7 +67,7 @@ class Player(GameObject):
                          coords, size, True, fpm=fpm, move_ticks=move_ticks)
         self.vision_cells = self.init_vision()
         self.vision = numpy.ones(
-            Brain.OBSERVATION_SPACE_VALUES, dtype=numpy.float32)
+            Brain.OBSERVATION_SPACE_VALUES, dtype=numpy.float64)
         self.celebration_count = 0
         self.report = function
         self.goal = goal
@@ -128,7 +128,7 @@ class Player(GameObject):
 
     def look_8_ways(self):
         self.vision_distance = numpy.ones(
-            self.brain.OBSERVATION_SPACE_VALUES, dtype=numpy.float32)
+            self.brain.OBSERVATION_SPACE_VALUES, dtype=numpy.float64)
         for wall in self.walls:
             x = wall.x - self.x
             y = wall.y - self.y
@@ -148,7 +148,7 @@ class Player(GameObject):
         b = numpy.array((self.goal.x, self.goal.y))
         self.vision_distance[8] = int(
             numpy.linalg.norm(a-b)) / Settings.VISION_DISTANCE
-        print(self.vision_distance[8])
+
         self.vision_distance[9] = angle_between(
             (self.x, self.y), (self.goal.x, self.goal.y))
 
