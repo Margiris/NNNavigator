@@ -39,7 +39,7 @@ class State:
         self.episode = 0
         self.episode_step = 0
         self.alive_count = 0
-        self.updates = 1
+        self.finished_count = 0
         self.name = name
         self.previous_state = program.state
         self.buttons = []
@@ -152,9 +152,11 @@ class State:
             if self.all_sprites:
                 self.all_sprites.update()
 
-            self.episode_step += 1
+            self.map = numpy.zeros(Settings.TILE_COUNT, dtype=numpy.int8)
+            for wall in self.wall_sprites:
+                self.map[wall.x][wall.y] = 1
 
-            self.updates += 1
+            self.episode_step += 1
 
             if self.alive_count <= 0 or self.episode_step > self.STEPS_PER_EPISODE:
                 if self.episode > self.EPISODES:
@@ -267,7 +269,6 @@ class State:
     def reset(self):
         self.episode += 1
         self.episode_step = 0
-        self.finished_count = 0
 
         [p.die() for p in self.player_sprites if p.is_alive]
         [p.resurrect() for p in self.player_sprites]
@@ -408,39 +409,18 @@ class State:
         # f.close()
 
     def acknowledge_death(self, player):
-        if self.updates:
-            self.updates = 0
-            self.map = numpy.zeros(Settings.TILE_COUNT, dtype=numpy.int8)
-            for wall in self.wall_sprites:
-                self.map[wall.x][wall.y] = 1
-
-        steps_total_a_star = self.steps_to_goal_Astar(player.starting_pos)
-
         if player.brain.reached_goal:
             self.finished_count += 1
+            steps_a_star = self.steps_to_goal_Astar(player.starting_pos)
             steps_diff = self.episode_step - \
-                len(steps_total_a_star) if steps_total_a_star else 0
-
+                len(steps_a_star) if steps_a_star else 0
             if steps_diff < 0:
                 # this means agent did better than A*
-                score = 2 + 1 / -steps_diff
+                player.brain.score += 2 + 1 / -steps_diff
             else:
-                score = 1 + 1 / steps_diff
+                player.brain.score += 1 + 1 / steps_diff
         else:
-            # if agebt didn't finish and goal can be reached by A*, set score to ration between distance left and total,
-            # otherwise add straight-line distance to score.
-            # If agent got farther from goal than it's start, add 0 to score
-            steps_left_a_star = self.steps_to_goal_Astar((player.x, player.y))
-            if steps_left_a_star and steps_total_a_star:
-                if len(steps_left_a_star) >= len(steps_total_a_star):
-                    score = 0
-                else:
-                    score = len(steps_total_a_star) / \
-                        len(steps_left_a_star) - 1
-            else:
-                score = 0.01 / player.look_8_ways()[8]
-        player.brain.score += score
-
+            player.brain.score += 1 / player.look_8_ways()[8]
         self.all_sprites.remove(player)
         self.alive_count -= 1
 
@@ -455,7 +435,7 @@ class State:
         return self.alive_count
 
     def get_celebrations(self):
-        return '{:3.0f}%|{:3.0f}%'.format(self.finished_count / self.AGENT_COUNT * 100, self.alive_count / self.AGENT_COUNT * 100)
+        return '{:3.0f} %|{:3.0f} %'.format(self.finished_count / self.AGENT_COUNT * 100, self.alive_count / self.AGENT_COUNT * 100)
 
     def get_episode(self):
         return '{:>d}/{:>d}/{:>3d}'.format(self.generation, self.episode, self.episode_step)
