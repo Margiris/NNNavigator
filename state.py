@@ -448,8 +448,12 @@ class State:
         return Astar.astar(self.map, pos, (self.goal.x, self.goal.y))
 
     def respawn_goal(self):
+        _from = (Settings.TILE_COUNT[0] * 2 / 4,
+                 Settings.TILE_COUNT[1] * 2 / 4)
+        _to = (Settings.TILE_COUNT[0] * 3 / 4,
+               Settings.TILE_COUNT[1] * 3 / 4)
         put_at_random_empty_space(
-            [self.goal], self.collides_with_anything)
+            [self.goal], self.collides_with_anything, _from, _to)
 
     def get_alive_count(self):
         return self.alive_count
