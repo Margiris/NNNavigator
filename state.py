@@ -19,7 +19,7 @@ class State:
 
     # Environment settings
     EPISODES = 20_000
-    STEPS_PER_EPISODE = 200
+    STEPS_PER_EPISODE = 200 * Settings.FRAMES_PER_MOVE
     MUTATE_EVERY = 5
     MUTATION_RATE = 0.01
 
