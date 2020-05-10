@@ -335,7 +335,7 @@ class State:
         timestamp = str(int(time()))
 
         f = split('(\.)', f)
-        model_filename = "".join(f[:-3])
+        model_filename = "".join(f[:-3], timestamp)
         f = f[:-2] + ['_', timestamp] + f[-2:]
         f = "".join(f)
 
