@@ -19,11 +19,11 @@ class State:
 
     # Environment settings
     EPISODES = 20_000
-    STEPS_PER_EPISODE = 200
+    STEPS_PER_EPISODE = 200 * Settings.FRAMES_PER_MOVE
     MUTATE_EVERY = 5
     MUTATION_RATE = 0.01
 
-    AGENT_COUNT = 50
+    AGENT_COUNT = 1
 
     # scores = {
     #     # "total": [None for _ in range(EPISODES)],
@@ -51,9 +51,6 @@ class State:
         self.all_sprites = None
         self.player_sprites = None
         self.wall_sprites = None
-
-        self.tensorboard = TensorBoard(
-            log_dir="logs/{}-{}".format(self.MODEL_NAME, int(time())))
 
         if self == State.MENU:
             self.handle_specific_events = self.handle_events_menu
@@ -84,7 +81,7 @@ class State:
             #                           self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (0, 0), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0])
             for _ in range(0, self.AGENT_COUNT):
                 Player((self.all_sprites, self.player_sprites), self.acknowledge_death,
-                       self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (0, 0), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0])
+                       self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (0, 0), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0], astar=self.steps_to_goal_Astar)
 
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(2),
                                                             Settings.BUTTON_BG_COLOR, "(P)ause",
@@ -159,52 +156,10 @@ class State:
             self.episode_step += 1
 
             if self.alive_count <= 0 or self.episode_step > self.STEPS_PER_EPISODE:
-                if self.episode > self.EPISODES:
-                    exit(0)
                 if not self.episode % self.MUTATE_EVERY:
                     self.restart()
                 else:
                     self.reset()
-
-    def make_new_generation(self):
-        if self.generation <= 0:
-            self.generation += 1
-            return
-        total_score = sum([p.brain.score for p in self.player_sprites])
-
-        gen_max = max([p.brain.score for p in self.player_sprites])
-        gen_avg = total_score / self.AGENT_COUNT
-        gen_min = min([p.brain.score for p in self.player_sprites])
-
-        if total_score == 0:
-            return
-
-        self.tensorboard.update_stats(max=gen_max, avg=gen_avg, min=gen_min)
-
-        for p in self.player_sprites:
-            p.brain.fitness = p.brain.score / total_score
-
-        new_generation_weights = []
-
-        for _ in range(self.AGENT_COUNT):
-            parent1 = self.get_one_player()
-            parent2 = self.get_one_player()
-            new_generation_weights.append(mutate(crossover(parent1, parent2)))
-
-        for p in self.player_sprites:
-            p.brain.model.set_weights(new_generation_weights.pop())
-            p.brain.score = 0
-
-        self.generation += 1
-        self.tensorboard.step = self.generation
-
-    def get_one_player(self):
-        index = 0
-        random_num = random()
-        for p in self.player_sprites:
-            random_num -= p.brain.fitness
-            if random_num <= 0:
-                return p
 
     def draw(self):
         if self.draw_game:
@@ -216,8 +171,8 @@ class State:
                 self.all_sprites.draw(self.surfaces[0].surface)
             if self.player_sprites:
                 self.player_sprites.draw(self.surfaces[0].surface)
-                [player.brain.draw()
-                 for player in self.player_sprites if player.is_alive]
+                for p in self.player_sprites:
+                    p.draw()
             for surface in self.surfaces:
                 surface.blit()
         else:
@@ -280,7 +235,6 @@ class State:
         self.respawn_goal()
 
     def restart(self):
-        self.make_new_generation()
         for wall in self.wall_sprites:
             self.all_sprites.remove(wall)
             self.wall_sprites.remove(wall)
@@ -409,18 +363,6 @@ class State:
         # f.close()
 
     def acknowledge_death(self, player):
-        if player.brain.reached_goal:
-            self.finished_count += 1
-            steps_a_star = self.steps_to_goal_Astar(player.starting_pos)
-            steps_diff = self.episode_step - \
-                len(steps_a_star) if steps_a_star else 0
-            if steps_diff < 0:
-                # this means agent did better than A*
-                player.brain.score += 2 + 1 / -steps_diff
-            else:
-                player.brain.score += 1 + 1 / steps_diff
-        else:
-            player.brain.score += 1 / player.look_8_ways()[8]
         self.all_sprites.remove(player)
         self.alive_count -= 1
 
