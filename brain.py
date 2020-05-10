@@ -104,7 +104,7 @@ class Brain:
         self.reached_goal = False
 
     def __str__(self):
-        return Settings.TUPLE_SEP.join([str(self.reached_goal)])
+        return Settings.TUPLE_SEP.join([str(self.reached_goal), str(self.score), str(self.fitness)])
 
     def create_model(self):
         model = Sequential()
@@ -134,9 +134,9 @@ class Brain:
         model = Sequential()
 
         model.add(
-            Dense(128, input_shape=self.OBSERVATION_SPACE_VALUES, activation='relu'))
-        model.add(Dense(128, activation='relu'))
-        model.add(Dense(128, activation='relu'))
+            Dense(128, input_shape=self.OBSERVATION_SPACE_VALUES))
+        model.add(Dense(128, activation='sigmoid'))
+        model.add(Dense(128, activation='sigmoid'))
         # model.add(Dense(self.ACTION_SPACE_SIZE, activation='softmax'))
         model.add(Dense(self.ACTION_SPACE_SIZE, activation='sigmoid'))
         model.compile(loss="mse", optimizer=Adam(
