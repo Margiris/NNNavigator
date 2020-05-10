@@ -35,8 +35,6 @@ class VisionSurface:
 
 
 class Brain:
-    MUTATION_RATE = 0.02
-
     OBSERVATION_SPACE_VALUES = (10,)
     action_space = {
         0: (0, 0),

@@ -21,9 +21,9 @@ class State:
     EPISODES = 20_000
     STEPS_PER_EPISODE = 200
     MUTATE_EVERY = 5
-    MUTATION_RATE = 0.05
+    MUTATION_RATE = 0.01
 
-    AGENT_COUNT = 10
+    AGENT_COUNT = 50
 
     # scores = {
     #     # "total": [None for _ in range(EPISODES)],
