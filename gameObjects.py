@@ -68,7 +68,8 @@ class Player(GameObject):
         self.vision_cells = self.init_vision()
         self.vision = numpy.ones(
             Brain.OBSERVATION_SPACE_VALUES, dtype=numpy.float64)
-        self.celebration_count = 0
+        self.vision_distance = numpy.ones(
+            Brain.OBSERVATION_SPACE_VALUES, dtype=numpy.float64)
         self.report = function
         self.goal = goal
         self.walls = walls
@@ -96,7 +97,8 @@ class Player(GameObject):
                 self.die()
             else:
                 if self.x + dx == self.goal.x and self.y + dy == self.goal.y:
-                    self.celebrate()
+                    self.brain.reached_goal = True
+                    self.die()
                 self.brain.move(dx, dy)
                 return super().move(dx, dy)
 
@@ -105,14 +107,6 @@ class Player(GameObject):
         self.color = Settings.PLAYER_DEAD_COLOR
         self.brain.die()
         self.report(self)
-
-    def celebrate(self):
-        self.brain.reached_goal = True
-        self.celebration_count += 1
-        self.report(self)
-
-    def get_celebrations(self):
-        return '{:.0f}/{:d}'.format(self.brain.episode_reward / self.brain.GOAL_REWARD, self.celebration_count)
 
     def resurrect(self):
         self.move_ticker = 0
@@ -147,7 +141,7 @@ class Player(GameObject):
         a = numpy.array((self.x, self.y))
         b = numpy.array((self.goal.x, self.goal.y))
         self.vision_distance[8] = int(
-            numpy.linalg.norm(a-b)) / Settings.VISION_DISTANCE
+            numpy.linalg.norm(a-b)) / Settings.TILE_COUNT[0]
 
         self.vision_distance[9] = angle_between(
             (self.x, self.y), (self.goal.x, self.goal.y))

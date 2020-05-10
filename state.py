@@ -9,12 +9,37 @@ from button import ButtonFactory
 from gameObjects import Goal, Player, Wall
 from surface import Surface, TiledScalableSurface
 from settings import Settings
+from brain import TensorBoard
+import Astar
+import numpy
 
 
 class State:
+    MODEL_NAME = 'NNNavigator-Genetic'
+
+    # Environment settings
+    EPISODES = 20_000
+    STEPS_PER_EPISODE = 200
+    MUTATE_EVERY = 5
+    MUTATION_RATE = 0.05
+
+    AGENT_COUNT = 10
+
+    # scores = {
+    #     # "total": [None for _ in range(EPISODES)],
+    #     # "progress": [None for _ in range(EPISODES)],
+    #     "max": [None for _ in range(EPISODES)],
+    #     "avg": [None for _ in range(EPISODES)],
+    #     "min": [None for _ in range(EPISODES)]
+    # }
+
     def __init__(self, name, program):
         self.draw_game = program.settings.DRAW_GAME
+        self.generation = 0
+        self.episode = 0
+        self.episode_step = 0
         self.alive_count = 0
+        self.finished_count = 0
         self.name = name
         self.previous_state = program.state
         self.buttons = []
@@ -26,6 +51,9 @@ class State:
         self.all_sprites = None
         self.player_sprites = None
         self.wall_sprites = None
+
+        self.tensorboard = TensorBoard(
+            log_dir="logs/{}-{}".format(self.MODEL_NAME, int(time())))
 
         if self == State.MENU:
             self.handle_specific_events = self.handle_events_menu
@@ -52,11 +80,11 @@ class State:
             self.goal = Goal(
                 (self.all_sprites), self.surfaces[0].tile_size, Settings.GOAL_COLOR, (0, 0))
 
-            self.main_player = Player((self.all_sprites, self.player_sprites), self.acknowledge_death,
-                                      self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (0, 0), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0])
-            # for _ in range(0, 10):
-            #     Player((self.all_sprites, self.player_sprites), self.acknowledge_death,
-            #            self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (10, 8), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0])
+            # self.main_player = Player((self.all_sprites, self.player_sprites), self.acknowledge_death,
+            #                           self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (0, 0), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0])
+            for _ in range(0, self.AGENT_COUNT):
+                Player((self.all_sprites, self.player_sprites), self.acknowledge_death,
+                       self.surfaces[0].tile_size, Settings.PLAYER_COLOR, (0, 0), goal=self.goal, walls=self.wall_sprites, vision_surface=self.surfaces[0])
 
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(2),
                                                             Settings.BUTTON_BG_COLOR, "(P)ause",
@@ -72,10 +100,10 @@ class State:
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(3),
                                                             Settings.BUTTON_BG_COLOR, "(R)estart", self.restart))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-3),
-                                                            Settings.BUTTON_BG_COLOR, self.main_player.get_celebrations, None))
+                                                            Settings.BUTTON_BG_COLOR, self.get_celebrations, None))
             self.buttons[-1].active = False
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-2),
-                                                            Settings.BUTTON_BG_COLOR, self.main_player.brain.get_episode, self.toggle_game_draw))
+                                                            Settings.BUTTON_BG_COLOR, self.get_episode, self.toggle_game_draw))
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-1),
                                                             Settings.BUTTON_BG_COLOR, program.get_fps, program.limit_fps))
             self.restart()
@@ -106,10 +134,10 @@ class State:
                                                             Settings.BUTTON_BG_COLOR, "(R)estart", self.restart))
             self.buttons[-1].active = False
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-3),
-                                                            Settings.BUTTON_BG_COLOR, self.previous_state.main_player.get_celebrations, None))
+                                                            Settings.BUTTON_BG_COLOR, self.previous_state.get_celebrations, None))
             self.buttons[-1].active = False
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-2),
-                                                            Settings.BUTTON_BG_COLOR, self.previous_state.main_player.brain.get_episode, self.toggle_game_draw))
+                                                            Settings.BUTTON_BG_COLOR, self.previous_state.get_episode, self.toggle_game_draw))
             self.buttons[-1].active = False
             self.buttons.append(ButtonFactory.create_button(self.surfaces[-1].surface, Settings.BUTTON_POS(-1),
                                                             Settings.BUTTON_BG_COLOR, program.get_fps, program.limit_fps))
@@ -123,19 +151,60 @@ class State:
         if self == State.PLAY:
             if self.all_sprites:
                 self.all_sprites.update()
-            if self.alive_count <= 0:
-                if self.main_player.brain.episode % 200 == 0 or self.main_player.brain.episode_step < 1:
-                    min_reward = min(
-                        self.main_player.brain.ep_rewards[-self.main_player.brain.AGGREGATE_STATS_EVERY:])
-                    gradual_min_reward = self.main_player.brain.MIN_REWARD + \
-                        self.main_player.brain.episode / 100
 
-                    if min_reward > gradual_min_reward:
-                        self.main_player.brain.MIN_REWARD = gradual_min_reward
-                        Settings.GOAL_DISTANCE *= 1.1
+            self.map = numpy.zeros(Settings.TILE_COUNT, dtype=numpy.int8)
+            for wall in self.wall_sprites:
+                self.map[wall.x][wall.y] = 1
+
+            self.episode_step += 1
+
+            if self.alive_count <= 0 or self.episode_step > self.STEPS_PER_EPISODE:
+                if self.episode > self.EPISODES:
+                    exit(0)
+                if not self.episode % self.MUTATE_EVERY:
                     self.restart()
                 else:
                     self.reset()
+
+    def make_new_generation(self):
+        if self.generation <= 0:
+            self.generation += 1
+            return
+        total_score = sum([p.brain.score for p in self.player_sprites])
+
+        gen_max = max([p.brain.score for p in self.player_sprites])
+        gen_avg = total_score / self.AGENT_COUNT
+        gen_min = min([p.brain.score for p in self.player_sprites])
+
+        if total_score == 0:
+            return
+
+        self.tensorboard.update_stats(max=gen_max, avg=gen_avg, min=gen_min)
+
+        for p in self.player_sprites:
+            p.brain.fitness = p.brain.score / total_score
+
+        new_generation_weights = []
+
+        for _ in range(self.AGENT_COUNT):
+            parent1 = self.get_one_player()
+            parent2 = self.get_one_player()
+            new_generation_weights.append(mutate(crossover(parent1, parent2)))
+
+        for p in self.player_sprites:
+            p.brain.model.set_weights(new_generation_weights.pop())
+            p.brain.score = 0
+
+        self.generation += 1
+        self.tensorboard.step = self.generation
+
+    def get_one_player(self):
+        index = 0
+        random_num = random()
+        for p in self.player_sprites:
+            random_num -= p.brain.fitness
+            if random_num <= 0:
+                return p
 
     def draw(self):
         if self.draw_game:
@@ -189,18 +258,6 @@ class State:
                 elif event.key == pygame.K_p or event.key == pygame.K_SPACE:
                     program.change_to_state(State.PAUSE)
                     break
-        move_x, move_y = 0, 0
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_LEFT]:
-            move_x += -1
-        if keys[pygame.K_RIGHT]:
-            move_x += 1
-        if keys[pygame.K_UP]:
-            move_y += -1
-        if keys[pygame.K_DOWN]:
-            move_y += 1
-        if move_x or move_y:
-            self.main_player.move(move_x, move_y)
 
     def handle_events_pause(self, program, events):
         for event in events:
@@ -210,29 +267,28 @@ class State:
                     break
 
     def reset(self):
+        self.episode += 1
+        self.episode_step = 0
+
         [p.die() for p in self.player_sprites if p.is_alive]
         [p.resurrect() for p in self.player_sprites]
         [self.all_sprites.add(p) for p in self.player_sprites]
         self.alive_count = len(self.player_sprites)
 
-        move_to(self.player_starting_pos, self.player_sprites)
+        for player in self.player_sprites:
+            move_to(player.starting_pos, [player])
         self.respawn_goal()
 
     def restart(self):
+        self.make_new_generation()
         for wall in self.wall_sprites:
             self.all_sprites.remove(wall)
             self.wall_sprites.remove(wall)
         self.spawn_random_walls()
 
-        self.player_starting_pos = put_at_random_empty_space(
-            self.player_sprites, self.main_player.collides_with_wall)
-
-        # _from = (max(0, int(self.main_player.x - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
-        #          max(0, int(self.main_player.y - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
-        # _to = (max(0, int(self.main_player.x + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
-        #        max(0, int(self.main_player.y + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
-        # put_at_random_empty_space(
-        #     [self.goal], self.main_player.collides_with_wall, _from, _to)
+        for player in self.player_sprites:
+            player.starting_pos = put_at_random_empty_space(
+                [player], self.collides_with_anything)
         self.reset()
 
     def spawn_random_walls(self):
@@ -271,7 +327,8 @@ class State:
                         movement_range = (0, 0)
 
                     speed = randint(1, Settings.MAX_FPS)
-                    for i in range(random_spot, random_spot + length):
+                    limit = random_spot + length if random_spot + length < tile_count else tile_count
+                    for i in range(random_spot, limit):
                         Wall((self.all_sprites, self.wall_sprites), self.surfaces[0].tile_size, color, (i, line) if axis == 0 else (
                             line, i), is_movable=movable, fpm=speed, movement_range=movement_range)
 
@@ -353,21 +410,41 @@ class State:
 
     def acknowledge_death(self, player):
         if player.brain.reached_goal:
-            self.respawn_goal()
+            self.finished_count += 1
+            steps_a_star = self.steps_to_goal_Astar(player.starting_pos)
+            steps_diff = self.episode_step - \
+                len(steps_a_star) if steps_a_star else 0
+            if steps_diff < 0:
+                # this means agent did better than A*
+                player.brain.score += 2 + 1 / -steps_diff
+            else:
+                player.brain.score += 1 + 1 / steps_diff
         else:
-            self.all_sprites.remove(player)
-            self.alive_count -= 1
+            player.brain.score += 1 / player.look_8_ways()[8]
+        self.all_sprites.remove(player)
+        self.alive_count -= 1
+
+    def steps_to_goal_Astar(self, pos):
+        return Astar.astar(self.map, pos, (self.goal.x, self.goal.y))
 
     def respawn_goal(self):
-        _from = (max(0, int(self.main_player.x - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
-                 max(0, int(self.main_player.y - Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
-        _to = (max(0, int(self.main_player.x + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)),
-               max(0, int(self.main_player.y + Settings.VISION_DISTANCE * Settings.GOAL_DISTANCE)))
         put_at_random_empty_space(
-            [self.goal], self.main_player.collides_with_wall, _from, _to)
+            [self.goal], self.collides_with_anything)
 
     def get_alive_count(self):
         return self.alive_count
+
+    def get_celebrations(self):
+        return '{:3.0f} %|{:3.0f} %'.format(self.finished_count / self.AGENT_COUNT * 100, self.alive_count / self.AGENT_COUNT * 100)
+
+    def get_episode(self):
+        return '{:>d}/{:>d}/{:>3d}'.format(self.generation, self.episode, self.episode_step)
+
+    def collides_with_anything(self, x, y):
+        for a in self.all_sprites:
+            if a.x == x and a.y == y:
+                return True
+        return False
 
     MENU = "menu"
     PLAY = "play"
@@ -396,3 +473,27 @@ def move_to(coords, list):
         s.move(coords[0] - s.x, coords[1] - s.y)
         s.is_movable = was_movable
         s.move_ticker = was_move_ticker
+
+
+def crossover(player1, player2):
+    new_weights = player1.brain.model.get_weights()
+    old_weights = player2.brain.model.get_weights()
+
+    # iterate through every other array because we need to skip bias arrays
+    for array in range(0, len(old_weights), 2):
+        for dimm in range(len(old_weights[array])):
+            for i in range(len(old_weights[array][dimm])):
+                if random() > 0.5:
+                    new_weights[array][dimm][i] = old_weights[array][dimm][i]
+
+    return new_weights
+
+
+def mutate(weights):
+    # iterate through every other array because we need to skip bias arrays
+    for array in range(0, len(weights), 2):
+        for dimm in weights[array]:
+            for i in dimm:
+                if random() > State.MUTATION_RATE:
+                    i += random()
+    return weights
