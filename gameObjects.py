@@ -80,14 +80,14 @@ class Player(GameObject):
             self.die()
         return super().update()
 
-    def draw(self):
+    def draw_path(self, surface):
         if self.steps:
-            for i in range(len(self.steps) - 1, 0):
-                start_pos = (self.steps[i][0] + self.player.tile_size[0] / 2,
-                             self.steps[i][1] + self.player.tile_size[1] / 2)
-                end_pos = (self.steps[i-1][0] + self.player.tile_size[0] / 2,
-                           self.steps[i-1][1] + self.player.tile_size[1] / 2)
-                pygame.draw.line(self.surfaces[0].surface,
+            for i in range(len(self.steps) - 1):
+                start_pos = (self.steps[i][0] * self.tile_size[0] + self.tile_size[0] / 2,
+                             self.steps[i][1] * self.tile_size[1] + self.tile_size[1] / 2)
+                end_pos = (self.steps[i+1][0] * self.tile_size[0] + self.tile_size[0] / 2,
+                           self.steps[i+1][1] * self.tile_size[1] + self.tile_size[1] / 2)
+                pygame.draw.line(surface,
                                  Settings.PLAYER_VISION_COLOR, start_pos, end_pos)
 
     def astar(self):

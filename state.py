@@ -19,7 +19,7 @@ class State:
 
     # Environment settings
     EPISODES = 20_000
-    STEPS_PER_EPISODE = 200 * Settings.FRAMES_PER_MOVE
+    STEPS_PER_EPISODE = 400 * Settings.FRAMES_PER_MOVE
     MUTATE_EVERY = 5
     MUTATION_RATE = 0.01
 
@@ -172,7 +172,7 @@ class State:
             if self.player_sprites:
                 self.player_sprites.draw(self.surfaces[0].surface)
                 for p in self.player_sprites:
-                    p.draw()
+                    p.draw_path(self.surfaces[0].surface)
             for surface in self.surfaces:
                 surface.blit()
         else:
