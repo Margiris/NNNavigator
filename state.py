@@ -170,12 +170,12 @@ class State:
             return
         total_score = sum([p.brain.score for p in self.player_sprites])
 
+        if total_score == 0:
+            return
+
         gen_max = max([p.brain.score for p in self.player_sprites])
         gen_avg = total_score / self.AGENT_COUNT
         gen_min = min([p.brain.score for p in self.player_sprites])
-
-        if total_score == 0:
-            return
 
         self.tensorboard.update_stats(max=gen_max, avg=gen_avg, min=gen_min)
 
@@ -419,7 +419,7 @@ class State:
         if player.brain.reached_goal:
             self.finished_count += 1
             steps_diff = self.episode_step - \
-                len(steps_total_a_star) if steps_total_a_star else 0
+                len(steps_total_a_star) if steps_total_a_star else -1
 
             if steps_diff < 0:
                 # this means agent did better than A*
@@ -518,6 +518,6 @@ def mutate(weights):
     for array in range(0, len(weights), 2):
         for dimm in weights[array]:
             for i in dimm:
-                if random() > State.MUTATION_RATE:
+                if random() < State.MUTATION_RATE:
                     i += random()
     return weights

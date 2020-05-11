@@ -134,11 +134,10 @@ class Brain:
         model = Sequential()
 
         model.add(
-            Dense(128, input_shape=self.OBSERVATION_SPACE_VALUES))
-        model.add(Dense(128, activation='sigmoid'))
-        model.add(Dense(128, activation='sigmoid'))
-        # model.add(Dense(self.ACTION_SPACE_SIZE, activation='softmax'))
-        model.add(Dense(self.ACTION_SPACE_SIZE, activation='sigmoid'))
+            Dense(32, input_shape=self.OBSERVATION_SPACE_VALUES))
+        model.add(Dense(32, activation='sigmoid'))
+        model.add(Dense(32, activation='sigmoid'))
+        model.add(Dense(self.ACTION_SPACE_SIZE, activation='softmax'))
         model.compile(loss="mse", optimizer=Adam(
             lr=0.001), metrics=['accuracy'])
         return model
