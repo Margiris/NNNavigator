@@ -239,11 +239,11 @@ class Brain:
         model = Sequential()
 
         model.add(Flatten(input_shape=self.OBSERVATION_SPACE_VALUES))
-        model.add(Dense(64, activation='relu'))
-        model.add(Dense(32, activation='relu'))
-        model.add(Dense(16, activation='relu'))
-        # model.add(Dense(self.ACTION_SPACE_SIZE, activation='softmax'))
-        model.add(Dense(self.ACTION_SPACE_SIZE, activation='linear'))
+        model.add(Dense(128, activation='relu'))
+        model.add(Dense(128, activation='relu'))
+        model.add(Dense(128, activation='relu'))
+        model.add(Dense(self.ACTION_SPACE_SIZE, activation='softmax'))
+        # model.add(Dense(self.ACTION_SPACE_SIZE, activation='linear'))
         model.compile(loss="mse", optimizer=Adam(
             lr=0.001), metrics=['accuracy'])
         return model
