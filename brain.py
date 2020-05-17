@@ -8,6 +8,7 @@ from keras.callbacks import Callback
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout, Conv2D, MaxPooling2D, Activation, Flatten
 from keras.optimizers import Adam
+from keras.initializers import RandomNormal
 import tensorflow as tf
 
 from settings import Settings
@@ -133,9 +134,8 @@ class Brain:
     def create_model_flat(self):
         model = Sequential()
 
-        model.add(
-            Dense(32, input_shape=self.OBSERVATION_SPACE_VALUES))
-        model.add(Dense(32, activation='sigmoid'))
+        model.add(Dense(32, input_shape=self.OBSERVATION_SPACE_VALUES,
+                        kernel_initializer=RandomNormal(seed=1)))
         model.add(Dense(32, activation='sigmoid'))
         model.add(Dense(self.ACTION_SPACE_SIZE, activation='softmax'))
         model.compile(loss="mse", optimizer=Adam(

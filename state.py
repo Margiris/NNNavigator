@@ -218,7 +218,7 @@ class State:
                  for player in self.player_sprites if player.is_alive]
             for surface in self.surfaces:
                 surface.blit()
-        else:
+        elif self.surfaces:
             self.surfaces[1].draw()
             for button in self.buttons:
                 button.draw()
