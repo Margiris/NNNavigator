@@ -29,12 +29,17 @@ class Program:
             self.pause()
 
     def run(self):
+        fps = []
         while self.state != State.QUIT:
             self.handle_events()
             self.update()
             self.draw()
             self.clock.tick(self.settings.MAX_FPS)
+            fps.append(self.clock.get_fps())
 
+        print(sum(fps) / len(fps))
+        print(max(fps))
+        print(min(fps))
         # pygame.quit()
         # sys.exit()
 
