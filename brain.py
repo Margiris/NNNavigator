@@ -228,8 +228,8 @@ class Brain:
         model.add(Dense(128, activation='relu'))
         model.add(Dense(128, activation='relu'))
         model.add(Dense(128, activation='relu'))
-        model.add(Dense(self.ACTION_SPACE_SIZE, activation='softmax'))
-        # model.add(Dense(self.ACTION_SPACE_SIZE, activation='linear'))
+        # model.add(Dense(self.ACTION_SPACE_SIZE, activation='softmax'))
+        model.add(Dense(self.ACTION_SPACE_SIZE, activation='linear'))
         model.compile(loss="mse", optimizer=Adam(
             lr=0.001), metrics=['accuracy'])
         return model
