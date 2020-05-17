@@ -151,7 +151,7 @@ class State:
                  for player in self.player_sprites if player.is_alive]
             for surface in self.surfaces:
                 surface.blit()
-        else:
+        elif self.surfaces:
             self.surfaces[1].draw()
             for button in self.buttons:
                 button.draw()
@@ -342,8 +342,8 @@ class State:
         with open(f, 'w') as f:
             f.write(str(self.previous_state.goal) + Settings.PROP_SEP + "\n")
             for player in self.player_sprites:
-                model_filename = player.brain.save_model(
-                    filename=model_filename)
+                # model_filename = player.brain.save_model(
+                #     filename=model_filename)
                 f.write(str(player) + Settings.PROP_SEP +
                         model_filename + Settings.PROP_SEP + "\n")
             for wall in self.wall_sprites:
