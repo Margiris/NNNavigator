@@ -94,7 +94,8 @@ class Player(GameObject):
         self.steps = self.steps_func((self.x, self.y))
         if self.steps:
             self.move(self.steps[-1][0] - self.x, self.steps[-1][1] - self.y)
-        # else:
+        else:
+            self.move_ticker = 0
         #     self.die()
 
     def move(self, dx=0, dy=0):

@@ -175,7 +175,7 @@ class State:
                     p.draw_path(self.surfaces[0].surface)
             for surface in self.surfaces:
                 surface.blit()
-        else:
+        elif self.surfaces:
             self.surfaces[1].draw()
             for button in self.buttons:
                 button.draw()
@@ -380,7 +380,7 @@ class State:
         return '{:3.0f} %|{:3.0f} %'.format(self.finished_count / self.AGENT_COUNT * 100, self.alive_count / self.AGENT_COUNT * 100)
 
     def get_episode(self):
-        return '{:>d}/{:>d}/{:>3d}'.format(self.generation, self.episode, self.episode_step)
+        return '{:>d}/{:>d}/{:>3d} (d)'.format(self.generation, self.episode, self.episode_step)
 
     def collides_with_anything(self, x, y):
         for a in self.all_sprites:
