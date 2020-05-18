@@ -292,7 +292,7 @@ class State:
         if props[0] == "P":
             model_filename = props[11] if len(props) == 13 else None
             self.previous_state.main_player = Player((self.previous_state.all_sprites, self.previous_state.player_sprites), self.previous_state.acknowledge_death, self.previous_state.surfaces[0].tile_size, color, (int(props[2]), int(
-                props[3])), (int(props[4]), int(props[5])), goal=self.previous_state.goal, walls=self.previous_state.wall_sprites, fpm=int(props[7]), move_ticks=int(props[8]), reached_goal=props[10] == "True", vision_surface=self.previous_state.surfaces[0], model_name=model_filename)
+                props[3])), (int(props[4]), int(props[5])), goal=self.previous_state.goal, walls=self.previous_state.wall_sprites, fpm=int(props[7]), move_ticks=int(props[8]), reached_goal=props[10] == "True", vision_surface=self.previous_state.surfaces[0])
             self.previous_state.alive_count += 1
             if props[9] != "True":
                 self.previous_state.main_player.die()
@@ -353,8 +353,8 @@ class State:
         with open(f, 'w') as f:
             f.write(str(self.previous_state.goal) + Settings.PROP_SEP + "\n")
             for player in self.player_sprites:
-                model_filename = player.brain.save_model(
-                    filename=model_filename)
+                # model_filename = player.brain.save_model(
+                #     filename=model_filename)
                 f.write(str(player) + Settings.PROP_SEP +
                         model_filename + Settings.PROP_SEP + "\n")
             for wall in self.wall_sprites:
