@@ -89,8 +89,9 @@ class Brain:
                      self.player.rect[1] + self.player.tile_size[1] / 2)
         # start_pos = (self.player.rect[0], self.player.rect[1])
         for direction, coord in self.player.DIRECTIONS.items():
-            end_pos = (start_pos[0] + coord[0] * self.player.vision_distance[direction] * self.player.tile_size[0] * Settings.VISION_DISTANCE,
-                       start_pos[1] + coord[1] * self.player.vision_distance[direction] * self.player.tile_size[1] * Settings.VISION_DISTANCE)
+            diagonal_div = numpy.sqrt(2) if direction % 2 else 1
+            end_pos = (start_pos[0] + coord[0] * self.player.vision_distance[direction] * self.player.tile_size[0] * Settings.VISION_DISTANCE / diagonal_div,
+                       start_pos[1] + coord[1] * self.player.vision_distance[direction] * self.player.tile_size[1] * Settings.VISION_DISTANCE / diagonal_div)
             draw.line(self.surface.surface,
                       Settings.PLAYER_VISION_COLOR, start_pos, end_pos)
         end_pos = (self.player.goal.rect[0] + self.player.tile_size[0] / 2,
